@@ -1,22 +1,26 @@
-//
-//  LoginView.swift
-//  Bike Trekr
-//
-//  Created by Ivan Romancev on 09.11.2021.
-//
 
 import SwiftUI
 import SwiftUIFontIcon
+import FirebaseAuth
 
 struct LoginView: View {
+    @Environment(\.presentationMode) var presentationMode
+    
+    @Binding var showLogin: Bool
+    
+   
     var body: some View {
         VStack {
             Spacer()
-            Text("Bike Trekr").font(.largeTitle).bold()
+            Text("Bike Trekr").font(.largeTitle).bold().foregroundColor(.red)
             Spacer()
             Spacer()
             Button(action: {
-                
+                if Auth.auth().currentUser != nil {
+                    showLogin = false
+                } else {
+                    GitHub.shared.processLogin()
+                }
             }) {
                 FontIcon.text(.ionicon(code: .logo_github), fontsize: 20)
                     .padding([.top, .leading, .bottom])
@@ -34,8 +38,3 @@ struct LoginView: View {
     }
 }
 
-struct LoginView_Previews: PreviewProvider {
-    static var previews: some View {
-        LoginView()
-    }
-}

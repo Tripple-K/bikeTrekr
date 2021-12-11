@@ -1,0 +1,6 @@
+version: "Apple Swift version 5.5 (swiftlang-1300.0.31.1 clang-1300.0.29.1)"
+options: "61d1dff3e44ac44628af1dcf78fef820c64d1f68a86d6df29708990af5353dd9"
+build_start_time: [1636370686, 991065979]
+build_end_time: [1636370689, 377788066]
+inputs:
+  "/Users/dnl-krsvch/Documents/Projects/Bike Trekr/Bike Trekr/Sources/Bike Trekr/main.swift": [1636370659, 986582040]

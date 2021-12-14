@@ -12,7 +12,7 @@ struct LoginView: View {
     var body: some View {
         VStack {
             Spacer()
-            Text("Bike Trekr").font(.largeTitle).bold().foregroundColor(.red)
+            Text("Bike Trekr").font(.largeTitle).bold()
             Spacer()
             Spacer()
             Button(action: {

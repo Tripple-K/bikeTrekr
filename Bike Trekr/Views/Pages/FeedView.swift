@@ -8,13 +8,17 @@
 import SwiftUI
 
 struct FeedView: View {
+    
+    @Binding var showLogin: Bool
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        SessionsView()
     }
 }
 
 struct FeedView_Previews: PreviewProvider {
+    @State static var show = false
     static var previews: some View {
-        FeedView()
+        FeedView(showLogin: $show)
     }
 }

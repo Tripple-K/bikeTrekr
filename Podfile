@@ -10,6 +10,7 @@ target 'Bike Trekr' do
   pod 'Firebase/Database'
   pod 'Firebase/Firestore'
   pod 'FirebaseFirestoreSwift'
+  
 
   # Pods for Bike Trekr
 

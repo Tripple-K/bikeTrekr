@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>669765466843-uov7ndn5i3a14cuad99qjbbnu8jairc0.apps.googleusercontent.com</string>
+	<string>669765466843-va6im8vsnnb1cuqmhvb6rf9vi2ubqcnv.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.669765466843-uov7ndn5i3a14cuad99qjbbnu8jairc0</string>
+	<string>com.googleusercontent.apps.669765466843-va6im8vsnnb1cuqmhvb6rf9vi2ubqcnv</string>
 	<key>API_KEY</key>
 	<string>AIzaSyBs8SVLA2jkq0To3vKaD0MYy3FvmLq6EcU</string>
 	<key>GCM_SENDER_ID</key>
@@ -13,7 +13,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>pfriedrix.Bike-Trekr</string>
+	<string>com.triplek.BikeTrekr</string>
 	<key>PROJECT_ID</key>
 	<string>bike-trekr</string>
 	<key>STORAGE_BUCKET</key>
@@ -29,6 +29,8 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:669765466843:ios:e8e30df9ae0e34fa91aafe</string>
+	<string>1:669765466843:ios:708617a7baca09b191aafe</string>
+	<key>DATABASE_URL</key>
+	<string>https://bike-trekr-default-rtdb.firebaseio.com</string>
 </dict>
 </plist>

@@ -26,9 +26,9 @@ struct MapView: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: MKMapView, context: Context) {
-        if manager.tracking {
-            let polyline = MKPolyline(coordinates: manager.locations, count: manager.locations.count)
-            uiView.removeOverlays(uiView.overlays)
+        if manager.tracking && !manager.paused {
+            let polyline = MKPolyline(coordinates: manager.locations2d, count: manager.locations2d.count)
+//            uiView.removeOverlays(uiView.overlays)
             uiView.addOverlay(polyline)
         }
         else if manager.finished {

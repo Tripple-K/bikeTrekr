@@ -4,8 +4,12 @@ import SwiftUIFontIcon
 
 struct MainView: View {
     
+    @Binding var showLogin: Bool
     
     @State var manager = LocationManager()
+    @ObservedObject var sessionRepo = SessionRepository()
+    @EnvironmentObject var auth: AuthenticationService
+    
     let generatorHeavy = UIImpactFeedbackGenerator(style: .heavy)
     let generatorLight = UIImpactFeedbackGenerator(style: .light)
     
@@ -20,7 +24,7 @@ struct MainView: View {
     
     @State var typeSession: TypeSession = .bike
     @State var voiceFeedback: Bool = false
-    @State var timerBeforeSession: Int = 3
+    @AppStorage("timerBeforeSession") var timerBeforeSession: Int = 3
     
     @State var showOverlayBeforeSession = false
     
@@ -31,6 +35,8 @@ struct MainView: View {
         fmtr.dateFormat = "hh:mm a"
         return fmtr
     }
+    
+    @State var showAlertLocationNeeded = false
     
     @State var showClock = false
     
@@ -123,7 +129,6 @@ struct MainView: View {
                         }
                         .sheet(isPresented: $showSessionSetUp) {
                             SessionSettingsView(typeSession: $typeSession, voiceFeedback: $voiceFeedback, timer: $timerBeforeSession)
-                                .padding()
                         }
                         .foregroundColor(.red)
                     } else {
@@ -168,6 +173,12 @@ struct MainView: View {
                     }
                     .frame(maxWidth: 210, maxHeight: 50)
                     .onTapGesture {
+                        guard manager.canWeStart else {
+                            showAlertLocationNeeded.toggle()
+                            return
+                        }
+                        
+                        
                         if timerBeforeSession > 0 && !manager.tracking {
                             Timer.scheduledTimer(withTimeInterval: TimeInterval(Double(timerBeforeSession) + 0.2), repeats: false) { (_) in
                                         withAnimation {
@@ -177,7 +188,7 @@ struct MainView: View {
                             showOverlayBeforeSession = true
                             DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(Double(timerBeforeSession) + 0.2)) {
                                 manager.speeds.removeAll()
-                                manager.locations.removeAll()
+                                manager.locations2d.removeAll()
                                 status = status == .running ? .pause : .running
                                 manager.tracking = true
                                 manager.paused = status == .pause ? true : false
@@ -195,7 +206,7 @@ struct MainView: View {
                         }
                         else {
                             manager.speeds.removeAll()
-                            manager.locations.removeAll()
+                            manager.locations2d.removeAll()
                             status = status == .running ? .pause : .running
                             manager.tracking = true
                             manager.paused = status == .pause ? true : false
@@ -228,15 +239,30 @@ struct MainView: View {
                             .gesture(
                                 LongPressGesture(minimumDuration: 1)
                                     .onEnded { _ in
+                                        guard let user = auth.user else {
+                                            showLogin.toggle()
+                                            return
+                                        }
+                                        
+                                        let locations = manager.locations.compactMap { location in
+                                            return Location(location: location)
+                                        }
+                                        
+                                        if manager.distance > 0 {
+                                                let session = Session(distance: manager.distance, duration: stopWatchManager.secondsElapsed, date: Date(), avSpeed: manager.avgSpeed, maxSpeed: manager.speeds.max() ?? 0, typeSession: typeSession.rawValue, userId: user.uid, locations: locations)
+                                            sessionRepo.add(session)
+                                        }
+                                        
                                         generatorHeavy.impactOccurred()
                                         status = .stop
                                         manager.tracking = false
                                         manager.finished = true
                                         manager.paused = false
-                                        manager.locations.removeAll()
+                                        manager.locations2d.removeAll()
                                         manager.distance = 0
                                         manager.speeds.removeAll()
                                         stopWatchManager.reset()
+                                        
                                     }
                             )
                     } else {
@@ -245,6 +271,9 @@ struct MainView: View {
                     
                 }.padding(.bottom, 20)
             }.padding(.bottom, 100)
+        }
+        .alert(isPresented: $showAlertLocationNeeded) {
+            Alert(title: Text("Location is needed"), message: Text("Please, make sure that in iPhone settings location for Bike Trekr is allow"))
         }
         .ignoresSafeArea(.all)
     }
@@ -257,8 +286,9 @@ enum StatusTracker {
 
 
 struct MainView_Previews: PreviewProvider {
+    @State static var show = false
     static var previews: some View {
-        MainView()
+        MainView(showLogin: $show)
             .preferredColorScheme(.dark)
             .previewDevice("iPhone 11")
     }

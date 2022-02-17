@@ -8,7 +8,8 @@ struct LogoView: View {
     
     var body: some View {
         withAnimation {
-            HStack {
+            ZStack {
+                Text("Bike Trekr").font(.largeTitle).bold().foregroundColor(.white)
                 GIFImage(name: "animation-logo")
             }.background(Color.init("LaunchColor"))
         }.onReceive (timer) { _ in

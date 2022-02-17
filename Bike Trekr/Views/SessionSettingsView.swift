@@ -12,6 +12,7 @@ struct SessionSettingsView: View {
     @Binding var voiceFeedback: Bool
     @Binding var timer: Int
     @State var showPicker: Bool = false
+    @AppStorage("autoPause") var autoPause = true
     
     var body: some View {
         NavigationView {
@@ -23,13 +24,15 @@ struct SessionSettingsView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                Toggle("Voice Feedback", isOn: $voiceFeedback)
+                Toggle("Voice Feedback", isOn: $voiceFeedback).tint(.red)
+                Toggle("Auto Pause", isOn: $autoPause).tint(.red)
                 Text("Delay start timer \(timer) secs").onTapGesture { showPicker.toggle() }
                 CollapsableWheelPicker("Delay start timer \(timer)", showsPicker: $showPicker, selection: $timer) {
                     ForEach(0...10, id: \.self) { i in
                        Text("\(i) secs")
                     }
                 }
+                
                 
             }
             .accentColor(.red)

@@ -11,7 +11,7 @@ struct GitHub {
         provider.scopes = ["user:email"]
     }
     
-    func processLogin() {
+    func processLogin(completion: @escaping () -> Void) {
         provider.getCredentialWith(nil) { credential, error in
             if let error = error {
                 print(error.localizedDescription)
@@ -21,7 +21,9 @@ struct GitHub {
                     if let error = error {
                         print(error.localizedDescription)
                     }
-                    guard let credential = authResult?.credential as? OAuthCredential else { return }
+                    guard let _ = authResult?.credential as? OAuthCredential else { return }
+                    
+                    completion()
                 }
             }
         }

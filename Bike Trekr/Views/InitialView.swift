@@ -8,6 +8,7 @@ struct InitialView: View {
     @State var showLogin = Auth.auth().currentUser != nil ? false : true
     
     @ObservedObject var auth = AuthenticationService()
+    @ObservedObject var sessionRepo = SessionRepository()
     
     var body: some View {
         ZStack (alignment: .bottomTrailing) {
@@ -16,10 +17,13 @@ struct InitialView: View {
                     Text("Feed")
                     Image(systemName: "list.dash")
                 }.tag(1)
+                    .environmentObject(sessionRepo)
+                    .environmentObject(auth)
                 MainView(showLogin: $showLogin).tabItem {
                     Text("Tracker")
                     Image(systemName: "hare")
                 }.tag(2)
+                    .environmentObject(sessionRepo)
                     .environmentObject(auth)
                 ProfileView(showLogin: $showLogin).tabItem {
                     Text("Profile")

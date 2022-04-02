@@ -23,7 +23,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.669765466843-uov7ndn5i3a14cuad99qjbbnu8jairc0</string>
+				<string>com.googleusercontent.apps.669765466843-va6im8vsnnb1cuqmhvb6rf9vi2ubqcnv</string>
 			</array>
 		</dict>
 	</array>
@@ -58,7 +58,7 @@
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIImageName</key>
-		<string></string>
+		<string>logo</string>
 	</dict>
 	<key>UILaunchStoryboardName</key>
 	<string>Launch Screen</string>

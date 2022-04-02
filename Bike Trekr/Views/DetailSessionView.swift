@@ -1,33 +1,64 @@
  import SwiftUI
 
 
-struct SessionsView: View {
+struct DetailSessionView: View {
     @Environment(\.colorScheme) var colorScheme
     
+    @State var session: Session
+    let dayFormatter = DateFormatter(with: "dd.MM.y")
+    let timeFormatter = DateFormatter(with: "hh:mm aa")
+    
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 20).fill(colorScheme == .dark ? .white : .black).frame(maxHeight: 250)
-            VStack {
-                HStack {
-                    Text("2021/01/07").foregroundColor(colorScheme == .dark ? .black : .white)
+        VStack (alignment: .leading, spacing: 0) {
+            HStack (alignment: .top, spacing: 0) {
+                VStack (alignment: .leading) {
+                    Text("\(dayFormatter.string(from: session.date))").font(.headline)
+                    Text("At \(timeFormatter.string(from: session.date))").foregroundColor(.gray).font(.body)
                 }
-                HStack {
-                    Text("")
+                Spacer()
+                HStack (spacing: 0) {
+                    Text("More")
+                        .font(.headline)
+                    Image(systemName: "chevron.right")
+                        .frame(width: 20, height: 20)
+                    
                 }
-            }
-            
-            
+                .offset(x: -4)
+                .foregroundColor(.red)
+               
+            }.padding(.leading)
+            HStack (spacing: 20) {
+                VStack (alignment: .leading) {
+                    HStack {
+                        Text("\(String(format: "%.2f", session.distance))").font(.headline)
+                        Text("km/h").foregroundColor(.gray).font(.body)
+                    }
+                    Text("distance").foregroundColor(.gray).font(.body)
+                }
+                VStack (alignment: .leading) {
+                    HStack {
+                        Text("\(String(format: "%.2f", session.avSpeed))").font(.headline)
+                        Text("km/h").foregroundColor(.gray).font(.body)
+                    }
+                    Text("av. speed").foregroundColor(.gray).font(.body)
+                }
+                VStack (alignment: .trailing) {
+                    Text("\(session.duration)").font(.headline)
+                    Text("time").foregroundColor(.gray).font(.body)
+                }
+            }.padding()
         }
     }
 }
 
 
 
-struct DetailSessionView_Previews: PreviewProvider {
-    @State static var show = false
-    static var previews: some View {
-        SessionsView()
-            .preferredColorScheme(.dark)
-            .previewDevice("iPhone 8")
+
+
+
+extension DateFormatter {
+    convenience init(with dateFormat: String) {
+        self.init()
+        self.dateFormat = dateFormat
     }
 }

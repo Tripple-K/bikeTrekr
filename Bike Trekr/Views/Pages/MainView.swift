@@ -7,18 +7,15 @@ struct MainView: View {
     @Binding var showLogin: Bool
     
     @State var manager = LocationManager()
-    @ObservedObject var sessionRepo = SessionRepository()
+    @EnvironmentObject var sessionRepo: SessionRepository
     @EnvironmentObject var auth: AuthenticationService
     
     let generatorHeavy = UIImpactFeedbackGenerator(style: .heavy)
     let generatorLight = UIImpactFeedbackGenerator(style: .light)
     
-    
-    @State var opacityFirst: Double = 0.9
-    @State var opacitySecond: Double = 0.3
-    @State var opacityThird: Double = 0
+    let gradientColors: [Color] = [.clear, .clear.opacity(0.5), .black.opacity(0.7), .black, .black, .black.opacity(0.7), .clear.opacity(0.5), .clear]
     @State var opacity: Double = 0
-    
+
     @State var showSessionSetUp: Bool = false
     @State var status: StatusTracker = .stop
     
@@ -40,21 +37,22 @@ struct MainView: View {
     
     @State var showClock = false
     
+    @AppStorage("autoPause") var autoPause = true
+    
     @ObservedObject var stopWatchManager = StopWatchManager()
     
     var body: some View {
-        VStack () {
-            Spacer()
-            VStack{
+        VStack (spacing: 0) {
+            VStack (spacing: 0) {
                 
                 VStack {
                     HStack {
                         Text("\(manager.speed * 3.6 > 0 ? (String(format: "%.1f", manager.speed * 3.6)) : "0.0")").font(Font.custom("Monaco", size: 36.0))
                         Text("km/h").font(Font.custom("Monaco", size: 18)).padding(.top, 13)
                     }
-                    .padding(.top, 100)
                     Text("speed").font(Font.custom("Monaco", size: 18)).foregroundColor(Color.gray)
                 }
+                 
                 VStack {
                     HStack {
                         Text("\(String(format: "%.2f", manager.distance))").font(Font.custom("Monaco", size: 36.0).italic())
@@ -67,9 +65,10 @@ struct MainView: View {
                     HStack {
                         Text("distance").font(Font.custom("Monaco", size: 18)).foregroundColor(Color.gray)
                         Spacer()
-                        Text("average speed").font(Font.custom("Monaco", size: 18)).foregroundColor(Color.gray)
+                        Text("av. speed").font(Font.custom("Monaco", size: 18)).foregroundColor(Color.gray)
                     }.padding(.horizontal)
                 }
+                
                 HStack {
                     Text("\(!showClock ? stopWatchManager.secondsElapsed : timeNow)").font(Font.custom("Monaco", size: 54.0))
                         .padding(.top)
@@ -80,42 +79,29 @@ struct MainView: View {
                     showClock.toggle()
                 }
             }
-            Spacer()
-            ZStack (alignment: .bottom) {
+            
+            VStack (spacing: 0) {
                 
-                ZStack (alignment: .top) {
-                    MapView(manager: manager)
-                        .frame(height: 500)
-                        .padding(.top, 50)
-                        .opacity(opacity)
-                }
-                
-                .mask(
-                    LinearGradient(gradient: Gradient(colors: [Color.black, Color.black, Color.black, Color.black.opacity(opacityFirst), Color.black.opacity(opacitySecond), Color.black.opacity(opacityThird)]), startPoint: .top, endPoint: .bottom))
-                .mask(
-                    LinearGradient(gradient: Gradient(colors: [Color.black, Color.black, Color.black, Color.black.opacity(opacityFirst), Color.black.opacity(opacitySecond), Color.black.opacity(opacityThird)]), startPoint: .bottomTrailing, endPoint: .topLeading)
-                )
-                .mask(LinearGradient(gradient: Gradient(colors: [Color.black, Color.black, Color.black, Color.black.opacity(opacityFirst), Color.black.opacity(opacitySecond), Color.black.opacity(opacityThird)]), startPoint: .leading, endPoint: .trailing))
-                .mask(
-                    LinearGradient(gradient: Gradient(colors: [Color.black, Color.black, Color.black, Color.black.opacity(opacityFirst), Color.black.opacity(opacitySecond), Color.black.opacity(opacityThird)]), startPoint: .bottomLeading, endPoint: .topTrailing)
-                )
-                .mask(LinearGradient(gradient:Gradient(colors: [Color.black, Color.black, Color.black, Color.black.opacity(opacityFirst), Color.black.opacity(opacitySecond), Color.black.opacity(opacityThird)]), startPoint: .trailing, endPoint: .leading))
-                .mask(
-                    LinearGradient(gradient: Gradient(colors: [Color.black, Color.black, Color.black, Color.black.opacity(opacityFirst), Color.black.opacity(opacitySecond), Color.black.opacity(opacityThird)]), startPoint: .topTrailing, endPoint: .bottomLeading)
-                )
-                .mask(LinearGradient(gradient:Gradient(colors: [Color.black, Color.black, Color.black, Color.black.opacity(opacityFirst), Color.black.opacity(opacitySecond), Color.black.opacity(opacityThird)]), startPoint: .bottom, endPoint: .top))
-                .mask(
-                    LinearGradient(gradient: Gradient(colors: [Color.black, Color.black, Color.black, Color.black.opacity(opacityFirst), Color.black.opacity(opacitySecond), Color.black.opacity(opacityThird)]), startPoint: .topTrailing, endPoint: .bottomLeading)
-                )
-                
-                .onAppear {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                        withAnimation (.linear(duration: 1.0)) {
-                            self.opacity = 1
+                    GeometryReader { proxy in
+                        
+                        VStack {
+                            MapView(manager: manager)
+                                .frame(width: proxy.size.width, height: proxy.size.width, alignment: .bottom)
+                            .opacity(opacity)
+                            .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .top, endPoint: .bottom))
+                            .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .leading, endPoint: .trailing))
+                            .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .bottomLeading, endPoint: .topTrailing))
+                            .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .topLeading, endPoint: .bottomTrailing))
+                        }.frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
+                           
+                    }
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                            withAnimation (.linear(duration: 1.0)) {
+                                self.opacity = 1
+                            }
                         }
                     }
-                    
-                }
                 HStack {
                     if status == .stop {
                         ZStack {
@@ -131,10 +117,7 @@ struct MainView: View {
                             SessionSettingsView(typeSession: $typeSession, voiceFeedback: $voiceFeedback, timer: $timerBeforeSession)
                         }
                         .foregroundColor(.red)
-                    } else {
-                        /*@START_MENU_TOKEN@*/EmptyView()/*@END_MENU_TOKEN@*/
                     }
-                    
                     ZStack {
                         RoundedRectangle(cornerSize: CGSize(width: 10, height: 10))
                             .fill(Color.red)
@@ -153,7 +136,6 @@ struct MainView: View {
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity, alignment: .center)
                             }
-                            
                             Spacer()
                             if typeSession == .bike {
                                 Image(systemName: "bicycle")
@@ -178,48 +160,19 @@ struct MainView: View {
                             return
                         }
                         
-                        
                         if timerBeforeSession > 0 && !manager.tracking {
                             Timer.scheduledTimer(withTimeInterval: TimeInterval(Double(timerBeforeSession) + 0.2), repeats: false) { (_) in
-                                        withAnimation {
-                                            self.showOverlayBeforeSession = false
-                                        }
-                                    }
+                                withAnimation {
+                                    self.showOverlayBeforeSession = false
+                                }
+                            }
                             showOverlayBeforeSession = true
                             DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(Double(timerBeforeSession) + 0.2)) {
-                                manager.speeds.removeAll()
-                                manager.locations2d.removeAll()
-                                status = status == .running ? .pause : .running
-                                manager.tracking = true
-                                manager.paused = status == .pause ? true : false
-                                generatorLight.impactOccurred()
-                                if stopWatchManager.paused {
-                                    stopWatchManager.startWatch()
-                                }
-                                else if stopWatchManager.running {
-                                    stopWatchManager.pauseWatch()
-                                }
-                                else {
-                                    stopWatchManager.startWatch()
-                                }
+                                self.start()
                             }
                         }
                         else {
-                            manager.speeds.removeAll()
-                            manager.locations2d.removeAll()
-                            status = status == .running ? .pause : .running
-                            manager.tracking = true
-                            manager.paused = status == .pause ? true : false
-                            generatorLight.impactOccurred()
-                            if stopWatchManager.paused {
-                                stopWatchManager.startWatch()
-                            }
-                            else if stopWatchManager.running {
-                                stopWatchManager.pauseWatch()
-                            }
-                            else {
-                                stopWatchManager.startWatch()
-                            }
+                            pause()
                         }
                         
                     }
@@ -239,44 +192,80 @@ struct MainView: View {
                             .gesture(
                                 LongPressGesture(minimumDuration: 1)
                                     .onEnded { _ in
-                                        guard let user = auth.user else {
-                                            showLogin.toggle()
-                                            return
-                                        }
-                                        
-                                        let locations = manager.locations.compactMap { location in
-                                            return Location(location: location)
-                                        }
-                                        
-                                        if manager.distance > 0 {
-                                                let session = Session(distance: manager.distance, duration: stopWatchManager.secondsElapsed, date: Date(), avSpeed: manager.avgSpeed, maxSpeed: manager.speeds.max() ?? 0, typeSession: typeSession.rawValue, userId: user.uid, locations: locations)
-                                            sessionRepo.add(session)
-                                        }
-                                        
-                                        generatorHeavy.impactOccurred()
-                                        status = .stop
-                                        manager.tracking = false
-                                        manager.finished = true
-                                        manager.paused = false
-                                        manager.locations2d.removeAll()
-                                        manager.distance = 0
-                                        manager.speeds.removeAll()
-                                        stopWatchManager.reset()
-                                        
+                                        self.finish()
                                     }
                             )
-                    } else {
-                        /*@START_MENU_TOKEN@*/EmptyView()/*@END_MENU_TOKEN@*/
                     }
-                    
-                }.padding(.bottom, 20)
-            }.padding(.bottom, 100)
+                }.padding()
+            }
         }
         .alert(isPresented: $showAlertLocationNeeded) {
             Alert(title: Text("Location is needed"), message: Text("Please, make sure that in iPhone settings location for Bike Trekr is allow"))
         }
-        .ignoresSafeArea(.all)
     }
+    
+    func pause() {
+        manager.locations2d.removeAll()
+        status = status == .running ? .pause : .running
+        manager.tracking = true
+        manager.paused = status == .pause ? true : false
+        generatorLight.impactOccurred()
+        if stopWatchManager.paused {
+            stopWatchManager.startWatch()
+        }
+        else if stopWatchManager.running {
+            stopWatchManager.pauseWatch()
+        }
+        else {
+            stopWatchManager.startWatch()
+        }
+    }
+    
+    func start() {
+        manager.speeds.removeAll()
+        manager.locations2d.removeAll()
+        status = status == .running ? .pause : .running
+        manager.tracking = true
+        manager.paused = status == .pause ? true : false
+        generatorLight.impactOccurred()
+        if stopWatchManager.paused {
+            stopWatchManager.startWatch()
+        }
+        else if stopWatchManager.running {
+            stopWatchManager.pauseWatch()
+        }
+        else {
+            stopWatchManager.startWatch()
+        }
+    }
+    
+    func finish() {
+        guard let user = auth.user else {
+            showLogin.toggle()
+            return
+        }
+        
+        let locations = manager.locations.compactMap { location in
+            return Location(location: location)
+        }
+        
+        if manager.distance > 0 {
+                let session = Session(distance: manager.distance, duration: stopWatchManager.secondsElapsed, date: Date(), avSpeed: manager.avgSpeed, maxSpeed: manager.speeds.max() ?? 0, typeSession: typeSession.rawValue, userId: user.uid, locations: locations)
+            sessionRepo.add(session)
+        }
+        
+        generatorHeavy.impactOccurred()
+        status = .stop
+        manager.tracking = false
+        manager.finished = true
+        manager.paused = false
+        manager.locations2d.removeAll()
+        manager.distance = 0
+        manager.speeds.removeAll()
+        stopWatchManager.reset()
+    }
+    
+
 }
 
 enum StatusTracker {
@@ -290,6 +279,7 @@ struct MainView_Previews: PreviewProvider {
     static var previews: some View {
         MainView(showLogin: $show)
             .preferredColorScheme(.dark)
-            .previewDevice("iPhone 11")
+            .previewDevice("iPhone 12")
     }
 }
+

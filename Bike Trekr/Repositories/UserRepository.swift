@@ -51,8 +51,9 @@ class UserRepository: ObservableObject {
             }
     }
     
-    func isExist(with userId: String, completion: @escaping (Bool) -> Void) {
+    func isExist(with email: String, and userId: String, completion: @escaping (Bool) -> Void) {
         store.collection(path)
+            .whereField("email", isEqualTo: email)
             .whereField("userId", isEqualTo: userId)
             .addSnapshotListener { querySnapshot, error in
                 if let error = error {

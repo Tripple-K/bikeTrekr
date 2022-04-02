@@ -24,11 +24,38 @@ extension CLLocation: Encodable {
     }
 }
 
+extension CLLocation {
+    convenience init(model: Location) {
+        self.init(coordinate:
+                    CLLocationCoordinate2DMake(model.latitude, model.longitude),
+                  altitude: model.altitude,
+                  horizontalAccuracy: model.horizontalAccuracy,
+                  verticalAccuracy: model.verticalAccuracy,
+                  course: model.course,
+                  speed: model.speed,
+                  timestamp: model.timestamp)
+    }
+}
+
 struct Location: Codable {
-    var location: CLLocation
+    let latitude: CLLocationDegrees
+    let longitude: CLLocationDegrees
+    let altitude: CLLocationDistance
+    let horizontalAccuracy: CLLocationAccuracy
+    let verticalAccuracy: CLLocationAccuracy
+    let speed: CLLocationSpeed
+    let course: CLLocationDirection
+    let timestamp: Date
     
     init(location: CLLocation) {
-        self.location = location
+        latitude = location.coordinate.latitude
+        longitude = location.coordinate.longitude
+        altitude = location.altitude
+        horizontalAccuracy = location.horizontalAccuracy
+        verticalAccuracy = location.verticalAccuracy
+        speed = location.speed
+        course = location.course
+        timestamp = location.timestamp
     }
     
     public init(from decoder: Decoder) throws {
@@ -48,3 +75,5 @@ struct Location: Codable {
         self.init(location: location)
     }
 }
+
+

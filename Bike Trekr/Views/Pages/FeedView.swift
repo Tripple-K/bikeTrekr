@@ -1,18 +1,33 @@
-//
-//  MapView.swift
-//  Bike Trekr
-//
-//  Created by Ivan Romancev on 30.09.2021.
-//
+
+
 
 import SwiftUI
 
 struct FeedView: View {
-    
     @Binding var showLogin: Bool
-    
+    @EnvironmentObject var sessionRepo: SessionRepository
+    @EnvironmentObject var auth: AuthenticationService
     var body: some View {
-        SessionsView()
+        
+        NavigationView {
+            VStack {
+                ScrollView {
+                    ForEach(sessionRepo.sessions) { session in
+                        DetailSessionView(session: session).padding()
+                    }
+                }
+            }
+            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+            .navigationBarTitle("Feed")
+            Spacer()
+        }
+        .frame(alignment: .leading)
+        .onAppear {
+            if auth.user == nil {
+                showLogin = true
+            }
+            sessionRepo.get()
+        }
     }
 }
 

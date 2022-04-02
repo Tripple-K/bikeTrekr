@@ -1,6 +1,7 @@
 
 import SwiftUI
 import MapKit
+import Combine
 
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var region = MKCoordinateRegion()
@@ -13,6 +14,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     var locations2d: [CLLocationCoordinate2D]
     var locations: [CLLocation]
+    
+    private var cancellables: Set<AnyCancellable> = []
     
     var tracking: Bool {
         didSet {
@@ -82,6 +85,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         
     }
     
-    
+    func checkAutoPause() {
+        self.$speed
+    }
 
 }

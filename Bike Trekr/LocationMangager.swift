@@ -49,10 +49,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         
         switch manager.authorizationStatus {
         case .notDetermined, .restricted, .denied:
-            print("no accesss")
             canWeStart = false
         case .authorizedAlways, .authorizedWhenInUse:
-            print("Access")
             canWeStart = true
         default:
             break

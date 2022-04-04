@@ -15,12 +15,12 @@ struct SessionSettingsView: View {
     @AppStorage("autoPause") var autoPause = true
     
     var body: some View {
-        NavigationView {
-            Form {
-                Text("Training Type")
-                Picker("Training Type", selection: $typeSession) {
+        List {
+            Section {
+                Text("Session Type")
+                Picker("Session Type", selection: $typeSession) {
                     ForEach(TypeSession.allCases, id: \.self) {
-                        Text($0.rawValue)
+                        Text($0.rawValue).foregroundColor(.white)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -32,11 +32,9 @@ struct SessionSettingsView: View {
                        Text("\(i) secs")
                     }
                 }
-                
-                
             }
+            .listRowSeparator(.hidden)
             .accentColor(.red)
-            .navigationTitle("Settings")
         }
     }
 }

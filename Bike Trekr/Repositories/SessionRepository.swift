@@ -47,6 +47,9 @@ class SessionRepository: ObservableObject {
                 self.sessions = documents.compactMap { document -> Session? in
                     return try! document.data(as: Session.self)
                 }
+                self.sessions.sort(by: {
+                    $0.date > $1.date
+                })
                
             }
     }

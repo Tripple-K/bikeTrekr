@@ -22,7 +22,13 @@ struct GitHub {
                         print(error.localizedDescription)
                     }
                     guard let _ = authResult?.credential as? OAuthCredential else { return }
-                    
+                    let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest()
+                    changeRequest?.photoURL = authResult?.user.photoURL
+                    changeRequest?.commitChanges { result in
+                        if let errorChangeRequest = result {
+                            print(errorChangeRequest.localizedDescription)
+                        }
+                    }
                     completion()
                 }
             }

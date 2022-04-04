@@ -7,33 +7,55 @@ struct FeedView: View {
     @Binding var showLogin: Bool
     @EnvironmentObject var sessionRepo: SessionRepository
     @EnvironmentObject var auth: AuthenticationService
+    
+    @State var showProfile = false
+    
     var body: some View {
-        
         NavigationView {
             VStack {
-                ScrollView {
+                ScrollView (showsIndicators: false) {
                     ForEach(sessionRepo.sessions) { session in
-                        DetailSessionView(session: session).padding()
+                        DetailSessionView(session: session)
+                            .background(RoundedRectangle(cornerRadius: 10).fill(Color("darkGray")))
+                            .padding()
                     }
                 }
             }
             .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-            .navigationBarTitle("Feed")
-            Spacer()
-        }
-        .frame(alignment: .leading)
-        .onAppear {
-            if auth.user == nil {
-                showLogin = true
+            .onAppear {
+                if auth.user == nil {
+                    showLogin = true
+                }
+                sessionRepo.get()
             }
-            sessionRepo.get()
+            .navigationTitle("Feed")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    AsyncImage(url: auth.user?.photoURL, content: { phase in
+                        switch phase {
+                        case .empty:
+                            ProgressView()
+                        case .success(let image):
+                            image.resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 33, height: 33)
+                        case .failure:
+                            Image(systemName: "person.circle.fill").frame(width: 33, height: 33)
+                        @unknown default:
+                            EmptyView()
+                        }
+                    })
+                        .background(Color(uiColor: UIColor.systemFill))
+                        .clipShape(Circle())
+                        .onTapGesture {
+                            self.showProfile.toggle()
+                        }
+                }
+            }
+        }.sheet(isPresented: $showProfile) {
+            ProfileView()
         }
     }
 }
 
-struct FeedView_Previews: PreviewProvider {
-    @State static var show = false
-    static var previews: some View {
-        FeedView(showLogin: $show)
-    }
-}
+

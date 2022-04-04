@@ -15,7 +15,7 @@ struct MainView: View {
     
     let gradientColors: [Color] = [.clear, .clear.opacity(0.5), .black.opacity(0.7), .black, .black, .black.opacity(0.7), .clear.opacity(0.5), .clear]
     @State var opacity: Double = 0
-
+    
     @State var showSessionSetUp: Bool = false
     @State var status: StatusTracker = .stop
     
@@ -24,6 +24,7 @@ struct MainView: View {
     @AppStorage("timerBeforeSession") var timerBeforeSession: Int = 3
     
     @State var showOverlayBeforeSession = false
+    @State var dateStart = Date()
     
     @State var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     @State var timeNow = ""
@@ -52,7 +53,7 @@ struct MainView: View {
                     }
                     Text("speed").font(Font.custom("Monaco", size: 18)).foregroundColor(Color.gray)
                 }
-                 
+                
                 VStack {
                     HStack {
                         Text("\(String(format: "%.2f", manager.distance))").font(Font.custom("Monaco", size: 36.0).italic())
@@ -68,40 +69,33 @@ struct MainView: View {
                         Text("av. speed").font(Font.custom("Monaco", size: 18)).foregroundColor(Color.gray)
                     }.padding(.horizontal)
                 }
-                
-                HStack {
-                    Text("\(!showClock ? stopWatchManager.secondsElapsed : timeNow)").font(Font.custom("Monaco", size: 54.0))
-                        .padding(.top)
-                        .onReceive(timer) { _ in
-                            self.timeNow = dateFormatter.string(from: Date())
-                        }
-                }.onTapGesture {
-                    showClock.toggle()
-                }
+                Text("\(stopWatchManager.secondsElapsed)")
+                    .font(Font.custom("Monaco", size: 54.0))
+                    .padding(.top)
             }
             
             VStack (spacing: 0) {
                 
-                    GeometryReader { proxy in
-                        
-                        VStack {
-                            MapView(manager: manager)
-                                .frame(width: proxy.size.width, height: proxy.size.width, alignment: .bottom)
+                GeometryReader { proxy in
+                    
+                    VStack {
+                        MapView(manager: manager)
+                            .frame(width: proxy.size.width, height: proxy.size.width, alignment: .bottom)
                             .opacity(opacity)
                             .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .top, endPoint: .bottom))
                             .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .leading, endPoint: .trailing))
                             .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .bottomLeading, endPoint: .topTrailing))
                             .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .topLeading, endPoint: .bottomTrailing))
-                        }.frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
-                           
-                    }
-                    .onAppear {
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            withAnimation (.linear(duration: 1.0)) {
-                                self.opacity = 1
-                            }
+                    }.frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
+                    
+                }
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                        withAnimation (.linear(duration: 1.0)) {
+                            self.opacity = 1
                         }
                     }
+                }
                 HStack {
                     if status == .stop {
                         ZStack {
@@ -144,6 +138,7 @@ struct MainView: View {
                             else if typeSession == .run {
                                 FontIcon.text(.awesome5Solid(code: .running), fontsize: 20)
                                     .frame(width: 50.0, height: 50.0).padding(.horizontal)
+                                    .foregroundColor(.white)
                             }
                             else if typeSession == .walk {
                                 Image(systemName: "figure.walk")
@@ -179,7 +174,7 @@ struct MainView: View {
                     .fullScreenCover(isPresented: $showOverlayBeforeSession) {
                         StartUpSessionView(timeBeforeSession: $timerBeforeSession)
                     }
-    
+                    
                     
                     if status != .stop {
                         ZStack {
@@ -222,6 +217,7 @@ struct MainView: View {
     }
     
     func start() {
+        dateStart = Date()
         manager.speeds.removeAll()
         manager.locations2d.removeAll()
         status = status == .running ? .pause : .running
@@ -250,7 +246,7 @@ struct MainView: View {
         }
         
         if manager.distance > 0 {
-                let session = Session(distance: manager.distance, duration: stopWatchManager.secondsElapsed, date: Date(), avSpeed: manager.avgSpeed, maxSpeed: manager.speeds.max() ?? 0, typeSession: typeSession.rawValue, userId: user.uid, locations: locations)
+            let session = Session(distance: manager.distance, duration: stopWatchManager.secondsElapsed, date: dateStart, avSpeed: manager.avgSpeed, maxSpeed: manager.speeds.max() ?? 0, typeSession: typeSession.rawValue, userId: user.uid, locations: locations)
             sessionRepo.add(session)
         }
         
@@ -265,7 +261,7 @@ struct MainView: View {
         stopWatchManager.reset()
     }
     
-
+    
 }
 
 enum StatusTracker {

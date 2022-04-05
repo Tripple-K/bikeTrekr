@@ -7,6 +7,7 @@ struct FeedView: View {
     @Binding var showLogin: Bool
     @EnvironmentObject var sessionRepo: SessionRepository
     @EnvironmentObject var auth: AuthenticationService
+    @ObservedObject var userRepo = UserRepository()
     
     @State var showProfile = false
     
@@ -53,7 +54,7 @@ struct FeedView: View {
                 }
             }
         }.sheet(isPresented: $showProfile) {
-            ProfileView()
+            ProfileView(userInfoViewModel: UserInfoViewModel(userInfo: userRepo.user!))
         }
     }
 }

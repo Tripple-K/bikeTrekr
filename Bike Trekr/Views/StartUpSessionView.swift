@@ -11,30 +11,35 @@ struct StartUpSessionView: View {
     
     @Environment(\.presentationMode) var presentationMode
     
+    @Binding var show: Bool
     @Binding var timeBeforeSession: Int
     @State var times = 0
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    @State var scaled = false
-    
+
     
     var body: some View {
         withAnimation(.easeOut(duration: 1).speed(2).repeatForever()) {
-            Text("\(timeBeforeSession)")
-                .scaleEffect(scaled ? 0.7 : 1)
-                .font(.custom("Monaco", size: 87)).foregroundColor(.red)
-                .onAppear {
-                    scaled = true
-                }
-                .onReceive (timer) { _ in
-                    if timeBeforeSession > 1 {
-                        timeBeforeSession -= 1
-                        times += 1
+            VStack {
+                Text("\(times)")
+                    .font(.custom("Monaco", size: 87)).foregroundColor(.red)
+                    .onAppear {
+                        times = timeBeforeSession
                     }
-                }
-                .onDisappear {
-                    timeBeforeSession = times + 1
-                    scaled = false
-                }
+                    .onReceive (timer) { _ in
+                        if times > 1 {
+                            times -= 1
+                        }
+                        else {
+                            self.show.toggle()
+                        }
+                    }
+                    
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onTapGesture {
+                self.show.toggle()
+            }
+           
         }
     }
 }

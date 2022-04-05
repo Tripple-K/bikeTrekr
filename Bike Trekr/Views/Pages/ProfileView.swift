@@ -7,18 +7,15 @@ struct ProfileView: View {
     
     @State var showLogin = false
     @EnvironmentObject var auth: AuthenticationService
-    @ObservedObject var userRepo = UserRepository()
-    @State var birthday = Date()
-    @State var newUserName = ""
+    @ObservedObject var userInfoViewModel: UserInfoViewModel
     @AppStorage("autoPause") var autoPause = true
     
     @State var showHeightPicker = false
-    @State var height = 170
     @State var showWeightPicker = false
-    @State var weight = 70
-    @State var sex: Sex = .male
     @State var showingAlertLogOut = false
     @State var ediUserName = false
+    
+    @State var sex: Sex = .male
     
     var body: some View {
         VStack {
@@ -28,7 +25,7 @@ struct ProfileView: View {
                         Text("Name")
                         Spacer()
                         if !ediUserName {
-                            Text("\(userRepo.user?.displayName ?? "User")").onTapGesture {
+                            Text("\(userInfoViewModel.userInfo.displayName)").onTapGesture {
                                 ediUserName.toggle()
                             }
                             Image(systemName: "chevron.right")
@@ -38,41 +35,30 @@ struct ProfileView: View {
                                     ediUserName.toggle()
                                 }
                         } else {
-                            TextField("\(userRepo.user?.displayName ?? "User")", text: $newUserName)
+                            TextField("\(userInfoViewModel.userInfo.displayName)", text: $userInfoViewModel.userInfo.displayName)
                                 .frame(width: 100, height: 20)
                                 .onSubmit {
-                                    var user = userRepo.user
-                                    user?.displayName = newUserName
-                                    user != nil ? userRepo.update(user!) : nil
                                     ediUserName.toggle()
+                                    userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
                                 }
                         }
                     }
-                    .onChange(of: height) { newValue in
-                        var user = userRepo.user
-                        user?.height = newValue
-                        user != nil ? userRepo.update(user!) : nil
-                    }
-                    DatePicker("Birthday", selection: $birthday, displayedComponents: [.date]).onChange(of: birthday) {newValue in
-                        var user = userRepo.user
-                        user?.birthday = newValue
-                        user != nil ? userRepo.update(user!) : nil
+                    DatePicker("Birthday", selection: $userInfoViewModel.userInfo.birthday, displayedComponents: [.date]).onChange(of: userInfoViewModel.userInfo.birthday) { _ in
+                        userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
                     }
                     HStack (spacing: 0) {
                         Text("Height")
                         Spacer()
-                        Text("\(height) cm").onTapGesture { showHeightPicker.toggle() }
+                        Text("\(userInfoViewModel.userInfo.height) cm").onTapGesture { showHeightPicker.toggle() }
                         Image(systemName: "chevron.right")
                             .foregroundColor(.red)
                             .onTapGesture { showHeightPicker.toggle() }
                             .frame(width: 20, height: 20)
                     }
-                    .onChange(of: height) { newValue in
-                        var user = userRepo.user
-                        user?.height = newValue
-                        user != nil ? userRepo.update(user!) : nil
+                    .onChange(of: userInfoViewModel.userInfo.height) { _ in
+                        userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
                     }
-                    CollapsableWheelPicker("Height", showsPicker: $showHeightPicker, selection: $height) {
+                    CollapsableWheelPicker("Height", showsPicker: $showHeightPicker, selection: $userInfoViewModel.userInfo.height) {
                         ForEach(91...242, id: \.self) { i in
                             Text("\(i)")
                         }
@@ -80,18 +66,16 @@ struct ProfileView: View {
                     HStack (spacing: 0) {
                         Text("Weight")
                         Spacer()
-                        Text("\(weight)  kg").onTapGesture { showWeightPicker.toggle() }
+                        Text("\(String(format: "%.1f", userInfoViewModel.userInfo.weight))  kg").onTapGesture { showWeightPicker.toggle() }
                         Image(systemName: "chevron.right")
                             .foregroundColor(.red)
                             .onTapGesture { showWeightPicker.toggle() }
                             .frame(width: 20, height: 20)
                     }
-                    .onChange(of: weight) { newValue in
-                        var user = userRepo.user
-                        user?.weight = Double(newValue)
-                        user != nil ? userRepo.update(user!) : nil
+                    .onChange(of: userInfoViewModel.userInfo.weight) { _ in
+                        userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
                     }
-                    CollapsableWheelPicker("Weight", showsPicker: $showWeightPicker, selection: $weight) {
+                    CollapsableWheelPicker("Weight", showsPicker: $showWeightPicker, selection: $userInfoViewModel.userInfo.weight) {
                         ForEach(30...500, id: \.self) { i in
                             Text("\(i)")
                         }
@@ -104,9 +88,8 @@ struct ProfileView: View {
                                 Text($0.rawValue)
                             }
                         }.onChange(of: sex) { newValue in
-                            var user = userRepo.user
-                            user?.sex = newValue.rawValue
-                            user != nil ? userRepo.update(user!) : nil
+                            userInfoViewModel.userInfo.sex = newValue.rawValue
+                            userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
                         }
                         .frame(width: 150)
                         .pickerStyle(.segmented)
@@ -139,12 +122,6 @@ struct ProfileView: View {
         .onAppear {
             if auth.user == nil {
                 showLogin = true
-            }
-            else {
-                sex = Sex(rawValue: "\(userRepo.user?.sex ?? "male")")!
-                height = userRepo.user?.height ?? 170
-                weight = Int(userRepo.user?.weight ?? 70)
-                birthday = userRepo.user?.birthday ?? Date()
             }
         }
         .fullScreenCover(isPresented: $showLogin) {

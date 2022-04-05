@@ -16,11 +16,12 @@ struct MainView: View {
     let gradientColors: [Color] = [.clear, .clear.opacity(0.5), .black.opacity(0.7), .black, .black, .black.opacity(0.7), .clear.opacity(0.5), .clear]
     @State var opacity: Double = 0
     
+    @State var checkSpeed = 0
+    
     @State var showSessionSetUp: Bool = false
     @State var status: StatusTracker = .stop
     
     @State var typeSession: TypeSession = .bike
-    @State var voiceFeedback: Bool = false
     @AppStorage("timerBeforeSession") var timerBeforeSession: Int = 3
     
     @State var showOverlayBeforeSession = false
@@ -108,7 +109,7 @@ struct MainView: View {
                             showSessionSetUp.toggle()
                         }
                         .sheet(isPresented: $showSessionSetUp) {
-                            SessionSettingsView(typeSession: $typeSession, voiceFeedback: $voiceFeedback, timer: $timerBeforeSession)
+                            SessionSettingsView(typeSession: $typeSession, timer: $timerBeforeSession)
                         }
                         .foregroundColor(.red)
                     }
@@ -155,24 +156,18 @@ struct MainView: View {
                             return
                         }
                         
-                        if timerBeforeSession > 0 && !manager.tracking {
-                            Timer.scheduledTimer(withTimeInterval: TimeInterval(Double(timerBeforeSession) + 0.2), repeats: false) { (_) in
-                                withAnimation {
-                                    self.showOverlayBeforeSession = false
-                                }
-                            }
+                        if !manager.tracking {
                             showOverlayBeforeSession = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + TimeInterval(Double(timerBeforeSession) + 0.2)) {
-                                self.start()
-                            }
                         }
                         else {
                             pause()
                         }
                         
                     }
-                    .fullScreenCover(isPresented: $showOverlayBeforeSession) {
-                        StartUpSessionView(timeBeforeSession: $timerBeforeSession)
+                    .fullScreenCover(isPresented: $showOverlayBeforeSession, onDismiss: {
+                        self.start()
+                    }) {
+                        StartUpSessionView(show: $showOverlayBeforeSession, timeBeforeSession: $timerBeforeSession)
                     }
                     
                     
@@ -196,6 +191,22 @@ struct MainView: View {
         }
         .alert(isPresented: $showAlertLocationNeeded) {
             Alert(title: Text("Location is needed"), message: Text("Please, make sure that in iPhone settings location for Bike Trekr is allow"))
+        }
+        .onReceive(timer) { _ in
+            guard autoPause else { return }
+            if status == .running {
+                if manager.speed < 1 {
+                    checkSpeed += 1
+                } else {
+                    checkSpeed = 0
+                }
+            } else {
+                checkSpeed = 0
+            }
+            
+            if checkSpeed == 15 {
+                self.pause()
+            }
         }
     }
     
@@ -224,6 +235,7 @@ struct MainView: View {
         manager.tracking = true
         manager.paused = status == .pause ? true : false
         generatorLight.impactOccurred()
+        checkSpeed = 0
         if stopWatchManager.paused {
             stopWatchManager.startWatch()
         }
@@ -259,6 +271,7 @@ struct MainView: View {
         manager.distance = 0
         manager.speeds.removeAll()
         stopWatchManager.reset()
+        checkSpeed = 0
     }
     
     

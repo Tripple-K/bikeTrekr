@@ -21,6 +21,8 @@ struct MainView: View {
     @State var showSessionSetUp: Bool = false
     @State var status: StatusTracker = .stop
     
+    @State var scaleStopButton = 1.0
+    
     @State var typeSession: TypeSession = .bike
     @AppStorage("timerBeforeSession") var timerBeforeSession: Int = 3
     
@@ -175,14 +177,24 @@ struct MainView: View {
                         ZStack {
                             Circle()
                                 .frame(width: 50.0, height: 50.0)
-                            
                             Image(systemName: "stop.fill")
                                 .foregroundColor(.white)
-                        }.foregroundColor(.red)
+                        }
+                        .scaleEffect(scaleStopButton)
+                        .offset(x: scaleStopButton == 1 ? 0 : 10, y: 0)
+                        .foregroundColor(.red)
                             .gesture(
                                 LongPressGesture(minimumDuration: 1)
                                     .onEnded { _ in
+                                        withAnimation {
+                                            scaleStopButton = 1
+                                        }
                                         self.finish()
+                                    }
+                                    .onChanged { _ in
+                                        withAnimation {
+                                            scaleStopButton = 1.2
+                                        }
                                     }
                             )
                     }
@@ -264,6 +276,7 @@ struct MainView: View {
         
         generatorHeavy.impactOccurred()
         status = .stop
+        manager.speed = 0
         manager.tracking = false
         manager.finished = true
         manager.paused = false

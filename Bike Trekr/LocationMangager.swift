@@ -82,9 +82,5 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         speed = manager.location?.speed ?? 0
         
     }
-    
-    func checkAutoPause() {
-        self.$speed
-    }
 
 }

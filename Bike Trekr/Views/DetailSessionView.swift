@@ -8,25 +8,40 @@ struct DetailSessionView: View {
     let dayFormatter = DateFormatter(with: "dd.MM.y")
     let timeFormatter = DateFormatter(with: "hh:mm aa")
     
+    @State var overviewMapView: DetailMapView?
     
     var body: some View {
         VStack (alignment: .leading, spacing: 0) {
-            HStack (alignment: .top, spacing: 0) {
-                VStack (alignment: .leading) {
-                    Text("\(dayFormatter.string(from: session.date))").font(.headline)
-                    Text("At \(timeFormatter.string(from: session.date))").foregroundColor(.gray).font(.body)
-                }
-                Spacer()
-                NavigationLink(destination: MoreDetailSessionView(session: session)) {
-                    HStack (spacing: 0) {
-                        Text("More")
-                            .font(.headline)
-                        Image(systemName: "chevron.right")
-                            .frame(width: 20, height: 20)
+            HStack (alignment: .top) {
+                overviewMapView
+                    .clipShape(RoundedRectangle(cornerRadius: 5))
+                    .frame(maxWidth: 70, minHeight: 70)
+                HStack (alignment: .top, spacing: 0) {
+
+                    VStack (alignment: .leading) {
+                        Text("\(dayFormatter.string(from: session.date))").font(.headline)
+                        Text("At \(timeFormatter.string(from: session.date))").foregroundColor(.gray).font(.body)
                     }
-                    .offset(x: -4)
-                    .foregroundColor(.red)
+                    
+                    Spacer()
+                    NavigationLink(destination: MoreDetailSessionView(session: session)) {
+                        HStack (spacing: 0) {
+                            Text("More")
+                                .font(.headline)
+                            Image(systemName: "chevron.right")
+                                .frame(width: 20, height: 20)
+                        }
+                        .offset(x: -4)
+                        .foregroundColor(.red)
+                    }
+                    
                 }
+                
+            }
+            .onAppear {
+                overviewMapView = DetailMapView(locations: session.locations)
+                overviewMapView?.userInteraction = false
+                overviewMapView?.iconMap = true
             }
             .padding(.leading)
             .padding(.top)

@@ -216,9 +216,14 @@ struct MainView: View {
                 checkSpeed = 0
             }
             
-            if checkSpeed == 15 {
+            if checkSpeed == 5 {
                 self.pause()
             }
+            
+            if manager.speed > 1 && manager.tracking && status == .pause {
+                self.pause()
+            }
+            
         }
     }
     
@@ -286,22 +291,8 @@ struct MainView: View {
         stopWatchManager.reset()
         checkSpeed = 0
     }
-    
-    
 }
 
 enum StatusTracker {
     case pause, stop, running
 }
-
-
-
-struct MainView_Previews: PreviewProvider {
-    @State static var show = false
-    static var previews: some View {
-        MainView(showLogin: $show)
-            .preferredColorScheme(.dark)
-            .previewDevice("iPhone 12")
-    }
-}
-

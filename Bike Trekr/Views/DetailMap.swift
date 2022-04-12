@@ -5,10 +5,20 @@ struct DetailMapView: UIViewRepresentable {
     
     let locations: [Location]
     
+    let mapView = MKMapView()
+
+    var userInteraction: Bool = true {
+        didSet {
+            mapView.isUserInteractionEnabled = userInteraction
+        }
+    }
+    
+    var iconMap = false
+    
     func makeUIView(context: Context) -> MKMapView {
-        let mapView = MKMapView()
+        
         mapView.delegate = context.coordinator
-        mapView.isUserInteractionEnabled = true
+        mapView.isUserInteractionEnabled = userInteraction
         let range = MKMapView.CameraZoomRange(minCenterCoordinateDistance: 2500, maxCenterCoordinateDistance: 10000)
         mapView.cameraZoomRange = range
         
@@ -18,9 +28,8 @@ struct DetailMapView: UIViewRepresentable {
             return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
         }
         
+        mapView.region = getRegion()
         if let first = coordinates.first {
-            mapView.region = MKCoordinateRegion(center: first, span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
-            
             let start = Point(bounds: MKMapRect(origin: .init(first), size: MKMapSize(width: 20, height: 20)), color: .blue)
             mapView.addOverlay(start, level: .aboveLabels)
         }
@@ -33,6 +42,7 @@ struct DetailMapView: UIViewRepresentable {
         let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
         
         mapView.addOverlay(polyline, level: .aboveRoads)
+        
         
         setUpAnnotaions(with: mapView)
         
@@ -62,13 +72,45 @@ struct DetailMapView: UIViewRepresentable {
             prev = coordinate
             
             if (distance.truncatingRemainder(dividingBy: 1) <= 0.01 || distance.truncatingRemainder(dividingBy: 1) >= 0.99) && distance > 0.01 {
-                let annotation = DistanceAnnotation(coordinate: coordinate.coordinate, title: "\(Int(round(distance))) km")
-                view.addAnnotation(annotation)
                 let point = Point(bounds: MKMapRect(origin: .init(coordinate.coordinate), size: MKMapSize(width: 15, height: 15)), color: .yellow)
                 view.addOverlay(point, level: .aboveLabels)
+                guard !iconMap else { return }
+                let annotation = DistanceAnnotation(coordinate: coordinate.coordinate, title: "\(Int(round(distance))) km")
+                view.addAnnotation(annotation)
             }
         }
         
+    }
+    
+    func getRegion() -> MKCoordinateRegion {
+        
+        
+        var minLatitude: CLLocationDegrees = 90.0
+        var maxLatitude: CLLocationDegrees = -90.0
+        var minLongitude: CLLocationDegrees = 180.0
+        var maxLongitude: CLLocationDegrees = -180.0
+        
+        for coordinate in self.locations {
+            let lat = Double(coordinate.latitude)
+            let long = Double(coordinate.longitude)
+            if lat < minLatitude {
+                minLatitude = lat
+            }
+            if long < minLongitude {
+                minLongitude = long
+            }
+            if lat > maxLatitude {
+                maxLatitude = lat
+            }
+            if long > maxLongitude {
+                maxLongitude = long
+            }
+        }
+        var span = MKCoordinateSpan(latitudeDelta: maxLatitude - minLatitude, longitudeDelta: maxLongitude - minLongitude)
+        let center = CLLocationCoordinate2DMake((maxLatitude - span.latitudeDelta / 2), (maxLongitude - span.longitudeDelta / 2))
+        span.latitudeDelta *= 1.1
+        span.longitudeDelta *= 1.1
+        return MKCoordinateRegion(center: center, span: span)
     }
     
 }

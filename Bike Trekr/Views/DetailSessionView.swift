@@ -1,82 +1,133 @@
- import SwiftUI
 
+
+import SwiftUI
+import SwiftUIFontIcon
+import MapKit
 
 struct DetailSessionView: View {
-    @Environment(\.colorScheme) var colorScheme
-    
     @State var session: Session
-    let dayFormatter = DateFormatter(with: "dd.MM.y")
-    let timeFormatter = DateFormatter(with: "hh:mm aa")
     
-    @State var overviewMapView: DetailMapView?
+    let dateFormatter = DateFormatter(with: "dd.MM.yyyy hh:mm a")
+    
+    @State var fullscreenMap = false
+    
+    @State var overviewMapView: DetailMapController?
+    
     
     var body: some View {
-        VStack (alignment: .leading, spacing: 0) {
-            HStack (alignment: .top) {
-                overviewMapView
-                    .clipShape(RoundedRectangle(cornerRadius: 5))
-                    .frame(maxWidth: 70, minHeight: 70)
-                HStack (alignment: .top, spacing: 0) {
-
-                    VStack (alignment: .leading) {
-                        Text("\(dayFormatter.string(from: session.date))").font(.headline)
-                        Text("At \(timeFormatter.string(from: session.date))").foregroundColor(.gray).font(.body)
-                    }
-                    
-                    Spacer()
-                    NavigationLink(destination: MoreDetailSessionView(session: session)) {
-                        HStack (spacing: 0) {
-                            Text("More")
-                                .font(.headline)
-                            Image(systemName: "chevron.right")
-                                .frame(width: 20, height: 20)
+        
+        VStack (spacing: 0) {
+            ScrollView(showsIndicators: false) {
+                VStack (spacing: 0) {
+                    Text("OVERALL")
+                        .bold()
+                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                        .font(.footnote)
+                        .foregroundColor(.gray)
+                        .padding(.bottom, -16)
+                        .padding(.leading)
+                    VStack (spacing: 0) {
+                        HStack {
+                            Text("Distance")
+                            Spacer()
+                            HStack (spacing: 4) {
+                                Text("\(String(format: "%.2f", session.distance).replacingOccurrences(of: ".", with: ","))").bold()
+                                Text("km").foregroundColor(.gray).italic().font(.body)
+                            }
                         }
-                        .offset(x: -4)
-                        .foregroundColor(.red)
+                        .padding()
+                        HStack {
+                            Text("Duration")
+                            Spacer()
+                            HStack (spacing: 4) {
+                                Text("\(session.duration)")
+                            }
+                        }.padding()
+                        HStack {
+                            Text("Average Speed")
+                            Spacer()
+                            HStack (spacing: 4) {
+                                Text("\(String(format: "%.1f", session.avSpeed).replacingOccurrences(of: ".", with: ","))").bold()
+                                Text("km/h").foregroundColor(.gray).italic().font(.body)
+                            }
+                            
+                        }.padding()
+                        HStack {
+                            Text("Max Speed")
+                            Spacer()
+                            HStack (spacing: 4) {
+                                Text("\(String(format: "%.1f", session.maxSpeed).replacingOccurrences(of: ".", with: ","))").bold()
+                                Text("km/h").foregroundColor(.gray).italic().font(.body)
+                            }
+                            
+                        }.padding()
+                        HStack {
+                            Text("Session Type")
+                            Spacer()
+                            switch session.typeSession {
+                            case .bike:
+                                Image(systemName: "bicycle")
+                                    .frame(width: 24, height: 24)
+                            case .walk:
+                                Image(systemName: "figure.walk")
+                                    .frame(width: 24, height: 24)
+                            case .run:
+                                FontIcon.text(.awesome5Solid(code: .running), fontsize: 20).frame(width: 24, height: 24)
+                            default:
+                                EmptyView()
+                            }
+                        }.padding()
                     }
-                    
+                    .font(.headline)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(Color("darkGray")))
+                    .padding()
+                    Text("MAP")
+                        .bold()
+                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                        .font(.footnote)
+                        .foregroundColor(.gray)
+                        .padding(.bottom, -16)
+                        .padding(.leading)
+                    overviewMapView
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .frame(width: UIScreen.main.bounds.width * 0.9, height: UIScreen.main.bounds.width * 0.9)
+                        .onTapGesture {
+                            self.fullscreenMap.toggle()
+                        }
+                   
+                    .padding()
                 }
                 
             }
             .onAppear {
-                overviewMapView = DetailMapView(locations: session.locations)
+                overviewMapView = DetailMapController(locations: session.locations)
                 overviewMapView?.userInteraction = false
-                overviewMapView?.iconMap = true
             }
-            .padding(.leading)
-            .padding(.top)
-            HStack (spacing: 20) {
-                VStack (alignment: .leading) {
-                    HStack {
-                        Text("\(String(format: "%.2f", session.distance).replacingOccurrences(of: ".", with: ","))").font(.headline)
-                        Text("km").foregroundColor(.gray).font(.body)
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .background(Color("background"))
+        .fullScreenCover(isPresented: $fullscreenMap) {
+            DetailMapController(locations: session.locations)
+                .ignoresSafeArea()
+                .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+                .overlay {
+                    VStack (alignment: .leading) {
+                        Button(action: {
+                            self.fullscreenMap = false
+                        }, label: {
+                            HStack (spacing: 4) {
+                                Image(systemName: "chevron.left")
+                                    .resizable()
+                                    .foregroundColor(.red)
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 20, height: 20)
+                                Text("Back").foregroundColor(.red).font(.headline)
+                            }
+                            .frame(width: 100, height: 40)
+                        })
                     }
-                    Text("distance").foregroundColor(.gray).font(.body)
                 }
-                VStack (alignment: .leading) {
-                    HStack {
-                        Text("\(String(format: "%.1f", session.avSpeed).replacingOccurrences(of: ".", with: ","))").font(.headline)
-                        Text("km/h").foregroundColor(.gray).font(.body)
-                    }
-                    Text("av. speed").foregroundColor(.gray).font(.body)
-                }
-                VStack (alignment: .trailing) {
-                    Text("\(session.duration)").font(.headline)
-                    Text("time").foregroundColor(.gray).font(.body)
-                }
-            }.padding()
         }
     }
 }
 
-
-
-
-
-
-extension DateFormatter {
-    convenience init(with dateFormat: String) {
-        self.init()
-        self.dateFormat = dateFormat
-    }
-}

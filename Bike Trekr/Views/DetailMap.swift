@@ -1,12 +1,12 @@
 import SwiftUI
 import MapKit
 
-struct DetailMapView: UIViewRepresentable {
+struct DetailMapController: UIViewRepresentable {
     
     let locations: [Location]
     
     let mapView = MKMapView()
-
+    
     var userInteraction: Bool = true {
         didSet {
             mapView.isUserInteractionEnabled = userInteraction
@@ -62,7 +62,6 @@ struct DetailMapView: UIViewRepresentable {
             return CLLocation(latitude: location.latitude, longitude: location.longitude)
         }
         
-        
         var distance: Double = 0
         
         guard var prev = coordinates.first else { return }
@@ -83,8 +82,6 @@ struct DetailMapView: UIViewRepresentable {
     }
     
     func getRegion() -> MKCoordinateRegion {
-        
-        
         var minLatitude: CLLocationDegrees = 90.0
         var maxLatitude: CLLocationDegrees = -90.0
         var minLongitude: CLLocationDegrees = 180.0
@@ -112,13 +109,12 @@ struct DetailMapView: UIViewRepresentable {
         span.longitudeDelta *= 1.1
         return MKCoordinateRegion(center: center, span: span)
     }
-    
 }
 
 class Coordinator: NSObject, MKMapViewDelegate {
-    var parent: DetailMapView
+    var parent: DetailMapController
     
-    init(_ parent: DetailMapView) {
+    init(_ parent: DetailMapController) {
         self.parent = parent
     }
     

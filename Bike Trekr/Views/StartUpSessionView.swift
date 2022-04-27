@@ -1,9 +1,4 @@
-//
-//  StartUpSessionView.swift
-//  Bike Trekr
-//
-//  Created by Ivan Romancev on 17.10.2021.
-//
+
 
 import SwiftUI
 
@@ -15,7 +10,8 @@ struct StartUpSessionView: View {
     @Binding var timeBeforeSession: Int
     @State var times = 0
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-
+    
+    let generatorHeavy = UIImpactFeedbackGenerator(style: .heavy)
     
     var body: some View {
         withAnimation(.easeOut(duration: 1).speed(2).repeatForever()) {
@@ -28,6 +24,7 @@ struct StartUpSessionView: View {
                     .onReceive (timer) { _ in
                         if times > 1 {
                             times -= 1
+                            generatorHeavy.impactOccurred()
                         }
                         else {
                             self.show.toggle()

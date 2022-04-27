@@ -6,9 +6,10 @@ struct MainView: View {
     
     @Binding var showLogin: Bool
     
-    @State var manager = LocationManager()
     @EnvironmentObject var sessionRepo: SessionRepository
     @EnvironmentObject var auth: AuthenticationService
+    
+    @ObservedObject var sessionViewModel = SessionViewModel()
     
     let generatorHeavy = UIImpactFeedbackGenerator(style: .heavy)
     let generatorLight = UIImpactFeedbackGenerator(style: .light)
@@ -19,18 +20,16 @@ struct MainView: View {
     @State var checkSpeed = 0
     
     @State var showSessionSetUp: Bool = false
-    @State var status: StatusTracker = .stop
     
     @State var scaleStopButton = 1.0
     
-    @State var typeSession: TypeSession = .bike
     @AppStorage("timerBeforeSession") var timerBeforeSession: Int = 3
     
     @State var showOverlayBeforeSession = false
-    @State var dateStart = Date()
     
     @State var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    @State var timeNow = ""
+    
+    @State var time = ""
     var dateFormatter: DateFormatter {
         let fmtr = DateFormatter()
         fmtr.dateFormat = "hh:mm a"
@@ -43,26 +42,22 @@ struct MainView: View {
     
     @AppStorage("autoPause") var autoPause = true
     
-    @ObservedObject var stopWatchManager = StopWatchManager()
-    
     var body: some View {
         VStack (spacing: 0) {
             VStack (spacing: 0) {
-                
                 VStack {
                     HStack {
-                        Text("\(manager.speed * 3.6 > 0 ? (String(format: "%.1f", manager.speed * 3.6)) : "0.0")").font(Font.custom("Monaco", size: 36.0))
+                        Text("\(sessionViewModel.speed * 3.6 > 0 ? (String(format: "%.1f", sessionViewModel.speed * 3.6)) : "0.0")").font(Font.custom("Monaco", size: 36.0))
                         Text("km/h").font(Font.custom("Monaco", size: 18)).padding(.top, 13)
                     }
                     Text("speed").font(Font.custom("Monaco", size: 18)).foregroundColor(Color.gray)
                 }
-                
                 VStack {
                     HStack {
-                        Text("\(String(format: "%.2f", manager.distance))").font(Font.custom("Monaco", size: 36.0).italic())
+                        Text("\(String(format: "%.2f", sessionViewModel.session.distance))").font(Font.custom("Monaco", size: 36.0).italic())
                         Text("km").font(Font.custom("Monaco", size: 18.0).italic()).padding(.top, 13)
                         Spacer()
-                        Text("\(manager.avgSpeed * 3.6 > 0 ? (String(format: "%.1f", manager.avgSpeed * 3.6)) : "0.0")").font(Font.custom("Monaco", size: 36.0).italic())
+                        Text("\(sessionViewModel.session.avSpeed * 3.6 > 0 ? (String(format: "%.1f", sessionViewModel.session.avSpeed * 3.6)) : "0.0")").font(Font.custom("Monaco", size: 36.0).italic())
                         Text("km/h").font(Font.custom("Monaco", size: 18).italic()).padding(.top, 13)
                     }
                     .padding(.horizontal)
@@ -72,9 +67,15 @@ struct MainView: View {
                         Text("av. speed").font(Font.custom("Monaco", size: 18)).foregroundColor(Color.gray)
                     }.padding(.horizontal)
                 }
-                Text("\(stopWatchManager.secondsElapsed)")
+                Text("\(showClock ? time : sessionViewModel.session.duration)".lowercased())
                     .font(Font.custom("Monaco", size: 54.0))
                     .padding(.top)
+                    .onTapGesture {
+                        showClock.toggle()
+                    }
+                    .onReceive(timer) { _ in
+                        time = dateFormatter.string(from: .now)
+                    }
             }
             
             VStack (spacing: 0) {
@@ -82,7 +83,7 @@ struct MainView: View {
                 GeometryReader { proxy in
                     
                     VStack {
-                        MapView(manager: manager)
+                        MapView(manager: sessionViewModel)
                             .frame(width: proxy.size.width, height: proxy.size.width, alignment: .bottom)
                             .opacity(opacity)
                             .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .top, endPoint: .bottom))
@@ -100,7 +101,7 @@ struct MainView: View {
                     }
                 }
                 HStack {
-                    if status == .stop {
+                    if sessionViewModel.status == .stop {
                         ZStack {
                             Circle()
                                 .frame(width: 50.0, height: 50.0)
@@ -111,7 +112,7 @@ struct MainView: View {
                             showSessionSetUp.toggle()
                         }
                         .sheet(isPresented: $showSessionSetUp) {
-                            SessionSettingsView(typeSession: $typeSession, timer: $timerBeforeSession)
+                            SessionSettingsView(typeSession: $sessionViewModel.session.typeSession, timer: $timerBeforeSession)
                         }
                         .foregroundColor(.red)
                     }
@@ -119,7 +120,7 @@ struct MainView: View {
                         RoundedRectangle(cornerSize: CGSize(width: 10, height: 10))
                             .fill(Color.red)
                         HStack {
-                            if status == .stop {
+                            if sessionViewModel.status == .stop {
                                 Text("Start")
                                     .font(.headline)
                                     .padding(.leading, 50)
@@ -127,38 +128,40 @@ struct MainView: View {
                                     .frame(maxWidth: .infinity, alignment: .center)
                             }
                             else {
-                                Text(status == .running ? "Pause" : "Resume")
+                                Text(sessionViewModel.status == .running ? "Pause" : "Resume")
                                     .font(.headline)
                                     .padding(.leading, 50)
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity, alignment: .center)
                             }
                             Spacer()
-                            if typeSession == .bike {
+                            switch sessionViewModel.session.typeSession {
+                            case .bike:
                                 Image(systemName: "bicycle")
                                     .frame(width: 50.0, height: 50.0).padding(.horizontal)
-                                .foregroundColor(.white) }
-                            else if typeSession == .run {
-                                FontIcon.text(.awesome5Solid(code: .running), fontsize: 20)
-                                    .frame(width: 50.0, height: 50.0).padding(.horizontal)
                                     .foregroundColor(.white)
-                            }
-                            else if typeSession == .walk {
+                            case .walk:
                                 Image(systemName: "figure.walk")
                                     .frame(width: 50.0, height: 50.0).padding(.horizontal)
                                     .foregroundColor(.white)
+                            case .run:
+                                FontIcon.text(.awesome5Solid(code: .running), fontsize: 20)
+                                    .frame(width: 50.0, height: 50.0).padding(.horizontal)
+                                    .foregroundColor(.white)
+                                
+                                
                             }
                             
                         }
                     }
                     .frame(maxWidth: 210, maxHeight: 50)
                     .onTapGesture {
-                        guard manager.canWeStart else {
+                        guard sessionViewModel.canStart else {
                             showAlertLocationNeeded.toggle()
                             return
                         }
                         
-                        if !manager.tracking {
+                        if sessionViewModel.status == .stop {
                             showOverlayBeforeSession = true
                         }
                         else {
@@ -173,7 +176,7 @@ struct MainView: View {
                     }
                     
                     
-                    if status != .stop {
+                    if sessionViewModel.status != .stop {
                         ZStack {
                             Circle()
                                 .frame(width: 50.0, height: 50.0)
@@ -183,31 +186,31 @@ struct MainView: View {
                         .scaleEffect(scaleStopButton)
                         .offset(x: scaleStopButton == 1 ? 0 : 10, y: 0)
                         .foregroundColor(.red)
-                            .gesture(
-                                LongPressGesture(minimumDuration: 1)
-                                    .onEnded { _ in
-                                        withAnimation {
-                                            scaleStopButton = 1
-                                        }
-                                        self.finish()
+                        .gesture(
+                            LongPressGesture(minimumDuration: 1)
+                                .onEnded { _ in
+                                    withAnimation {
+                                        scaleStopButton = 1
                                     }
-                                    .onChanged { _ in
-                                        withAnimation {
-                                            scaleStopButton = 1.2
-                                        }
+                                    self.finish()
+                                }
+                                .onChanged { _ in
+                                    withAnimation {
+                                        scaleStopButton = 1.2
                                     }
-                            )
+                                }
+                        )
                     }
                 }.padding()
             }
         }
         .alert(isPresented: $showAlertLocationNeeded) {
-            Alert(title: Text("Location is needed"), message: Text("Please, make sure that in iPhone settings location for Bike Trekr is allow"))
+            Alert(title: Text("Location is needed"), message: Text("Please, make sure that in iPhone settings location for Bike Trekr is allowed"))
         }
         .onReceive(timer) { _ in
             guard autoPause else { return }
-            if status == .running {
-                if manager.speed < 1 {
+            if sessionViewModel.status == .running {
+                if sessionViewModel.speed < 1 {
                     checkSpeed += 1
                 } else {
                     checkSpeed = 0
@@ -220,7 +223,7 @@ struct MainView: View {
                 self.pause()
             }
             
-            if manager.speed > 1 && manager.tracking && status == .pause {
+            if sessionViewModel.speed > 1 && sessionViewModel.status == .pause {
                 self.pause()
             }
             
@@ -228,71 +231,33 @@ struct MainView: View {
     }
     
     func pause() {
-        manager.locations2d.removeAll()
-        status = status == .running ? .pause : .running
-        manager.tracking = true
-        manager.paused = status == .pause ? true : false
+        sessionViewModel.pause()
         generatorLight.impactOccurred()
-        if stopWatchManager.paused {
-            stopWatchManager.startWatch()
-        }
-        else if stopWatchManager.running {
-            stopWatchManager.pauseWatch()
-        }
-        else {
-            stopWatchManager.startWatch()
-        }
     }
     
     func start() {
-        dateStart = Date()
-        manager.speeds.removeAll()
-        manager.locations2d.removeAll()
-        status = status == .running ? .pause : .running
-        manager.tracking = true
-        manager.paused = status == .pause ? true : false
+        sessionViewModel.start()
         generatorLight.impactOccurred()
         checkSpeed = 0
-        if stopWatchManager.paused {
-            stopWatchManager.startWatch()
-        }
-        else if stopWatchManager.running {
-            stopWatchManager.pauseWatch()
-        }
-        else {
-            stopWatchManager.startWatch()
-        }
     }
     
     func finish() {
-        guard let user = auth.user else {
+        
+        generatorHeavy.impactOccurred()
+        checkSpeed = 0
+        
+        guard let userId = auth.user?.uid else {
             showLogin.toggle()
             return
         }
         
-        let locations = manager.locations.compactMap { location in
-            return Location(location: location)
+        sessionViewModel.session.userId = userId
+        
+        if sessionViewModel.session.distance > 0 {
+            sessionRepo.add(sessionViewModel.session)
         }
         
-        if manager.distance > 0 {
-            let session = Session(distance: manager.distance, duration: stopWatchManager.secondsElapsed, date: dateStart, avSpeed: manager.avgSpeed, maxSpeed: manager.speeds.max() ?? 0, typeSession: typeSession.rawValue, userId: user.uid, locations: locations)
-            sessionRepo.add(session)
-        }
+        sessionViewModel.finish()
         
-        generatorHeavy.impactOccurred()
-        status = .stop
-        manager.speed = 0
-        manager.tracking = false
-        manager.finished = true
-        manager.paused = false
-        manager.locations2d.removeAll()
-        manager.distance = 0
-        manager.speeds.removeAll()
-        stopWatchManager.reset()
-        checkSpeed = 0
     }
-}
-
-enum StatusTracker {
-    case pause, stop, running
 }

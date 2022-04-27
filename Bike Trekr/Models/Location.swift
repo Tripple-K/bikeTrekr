@@ -74,6 +74,10 @@ struct Location: Codable {
         
         self.init(location: location)
     }
+    
+    func distance(_ location: Location) -> CLLocationDistance {
+        return CLLocation(latitude: self.latitude, longitude: self.longitude).distance(from: CLLocation(latitude: location.latitude, longitude: location.longitude))
+    }
 }
 
 

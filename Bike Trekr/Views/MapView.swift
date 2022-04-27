@@ -6,7 +6,7 @@ import UIKit
 struct MapView: UIViewRepresentable {
     
     typealias UIViewType = MKMapView
-    @ObservedObject var manager: LocationManager
+    @ObservedObject var manager: SessionViewModel
 
     func makeUIView(context: Context) -> MKMapView {
         let mapView = MKMapView()
@@ -20,14 +20,14 @@ struct MapView: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: MKMapView, context: Context) {
-        if manager.tracking && !manager.paused {
-            let polyline = MKPolyline(coordinates: manager.locations2d, count: manager.locations2d.count)
-//            uiView.removeOverlays(uiView.overlays)
+        if manager.status == .running {
+            let polyline = MKPolyline(coordinates: manager.session.locations.compactMap { location -> CLLocationCoordinate2D in
+                return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+            }, count: manager.session.locations.count)
             uiView.addOverlay(polyline)
         }
-        else if manager.finished {
+        else if manager.status == .stop {
             uiView.removeOverlays(uiView.overlays)
-            manager.finished = false
         }
     }
     

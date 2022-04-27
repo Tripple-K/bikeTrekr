@@ -28,7 +28,6 @@ class SessionRepository: ObservableObject {
         authenticationService.$user
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                
                 self?.get()
             }
             .store(in: &cancellables)

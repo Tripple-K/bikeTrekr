@@ -1,9 +1,3 @@
-//
-//  SessionSettings.swift
-//  Bike Trekr
-//
-//  Created by Ivan Romancev on 17.10.2021.
-//
 
 import SwiftUI
 
@@ -39,7 +33,7 @@ struct SessionSettingsView: View {
 
 
 
-enum TypeSession: String, Equatable, CaseIterable {
+enum TypeSession: String, Equatable, CaseIterable, Codable {
     case run = "Run"
     case bike = "Bike"
     case walk = "Walk"

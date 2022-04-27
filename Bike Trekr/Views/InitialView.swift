@@ -28,11 +28,11 @@ struct InitialView: View {
                     Text("Tracker")
                     Image(systemName: "hare")
                 }.tag(2)
-            RoutesView()
-                .tabItem {
-                    Text("Routes")
-                    Image(systemName: "map.fill")
-                }.tag(3)
+//            RoutesView()
+//                .tabItem {
+//                    Text("Routes")
+//                    Image(systemName: "map.fill")
+//                }.tag(3)
         }
         .accentColor(.red)
         .onAppear {

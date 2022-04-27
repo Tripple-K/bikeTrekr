@@ -7,6 +7,7 @@ struct FeedView: View {
     @Binding var showLogin: Bool
     @EnvironmentObject var sessionRepo: SessionRepository
     @EnvironmentObject var auth: AuthenticationService
+    @Environment(\.colorScheme) var colorScheme
     @ObservedObject var userRepo = UserRepository()
     
     @State var period: Period = .week
@@ -55,9 +56,12 @@ struct FeedView: View {
                         .padding(.bottom, -16)
                         .padding(.leading)
                     ForEach(sessions) { session in
-                        DetailSessionView(session: session)
-                            .background(RoundedRectangle(cornerRadius: 10).fill(Color("darkGray")))
-                            .padding()
+                        NavigationLink(destination: DetailSessionView(session: session)) {
+                            SessionView(session: session)
+                                .background(RoundedRectangle(cornerRadius: 10).fill(Color("darkGray")))
+                                .padding()
+                                .foregroundColor(colorScheme == .dark ? .white : .black)
+                        }
                     }
                 }
             }
@@ -105,7 +109,6 @@ struct FeedView: View {
                     return session.date > filterDate
                 }
             }
-        
             .navigationTitle("Feed")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -130,8 +133,12 @@ struct FeedView: View {
                         }
                 }
             }
-        }.sheet(isPresented: $showProfile) {
-            ProfileView(userInfoViewModel: UserInfoViewModel(userInfo: userRepo.user!))
+            .background(Color("background"))
+        }
+        .sheet(isPresented: $showProfile) {
+            if let user = userRepo.user {
+                ProfileView(userInfoViewModel: UserInfoViewModel(userInfo: user))
+            }
         }
     }
 }

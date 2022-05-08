@@ -8,6 +8,6 @@ struct UserInfo: Identifiable, Codable {
     var email: String
     var height: Int = 170
     var weight: Double = 70
-    var sex: String = "male"
+    var sex: Sex = .male
     var birthday = Date()
 }

@@ -112,25 +112,28 @@ struct FeedView: View {
             .navigationTitle("Feed")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    AsyncImage(url: auth.user?.photoURL, content: { phase in
-                        switch phase {
-                        case .empty:
-                            ProgressView()
-                        case .success(let image):
-                            image.resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 33, height: 33)
-                        case .failure:
-                            Image(systemName: "person.circle.fill").frame(width: 33, height: 33)
-                        @unknown default:
-                            EmptyView()
-                        }
+                    Button(action: {
+                        self.showProfile.toggle()
+                    }, label: {
+                        AsyncImage(url: auth.user?.photoURL, content: { phase in
+                            switch phase {
+                            case .empty:
+                                ProgressView()
+                            case .success(let image):
+                                image.resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 33, height: 33)
+                            case .failure:
+                                Image(systemName: "person.circle.fill").frame(width: 33, height: 33)
+                            @unknown default:
+                                EmptyView()
+                            }
+                        })
+                            .background(Color(uiColor: UIColor.systemFill))
+                            .clipShape(Circle())
                     })
-                        .background(Color(uiColor: UIColor.systemFill))
-                        .clipShape(Circle())
-                        .onTapGesture {
-                            self.showProfile.toggle()
-                        }
+                   
+                        
                 }
             }
             .background(Color("background"))

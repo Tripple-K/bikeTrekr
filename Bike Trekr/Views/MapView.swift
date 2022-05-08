@@ -13,6 +13,7 @@ struct MapView: UIViewRepresentable {
         
         mapView.delegate = context.coordinator
         mapView.setRegion(manager.region, animated: true)
+        
         mapView.showsUserLocation = true
         mapView.userTrackingMode = .followWithHeading
         mapView.isUserInteractionEnabled = false

@@ -1,10 +1,9 @@
 
 
 import SwiftUI
+import Combine
 
 struct ProfileView: View {
-    
-    
     @State var showLogin = false
     @EnvironmentObject var auth: AuthenticationService
     @ObservedObject var userInfoViewModel: UserInfoViewModel
@@ -15,8 +14,9 @@ struct ProfileView: View {
     @State var showingAlertLogOut = false
     @State var ediUserName = false
     
-    @State var sex: Sex = .male
-    
+    @State var weight = ""
+    @State var height = ""
+
     var body: some View {
         VStack {
             List {
@@ -46,49 +46,79 @@ struct ProfileView: View {
                     DatePicker("Birthday", selection: $userInfoViewModel.userInfo.birthday, displayedComponents: [.date]).onChange(of: userInfoViewModel.userInfo.birthday) { _ in
                         userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
                     }
-                    HStack (spacing: 0) {
+                    HStack {
                         Text("Height")
                         Spacer()
-                        Text("\(userInfoViewModel.userInfo.height) cm").onTapGesture { showHeightPicker.toggle() }
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.red)
-                            .onTapGesture { showHeightPicker.toggle() }
-                            .frame(width: 20, height: 20)
-                    }
-                    .onChange(of: userInfoViewModel.userInfo.height) { _ in
-                        userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
-                    }
-                    CollapsableWheelPicker("Height", showsPicker: $showHeightPicker, selection: $userInfoViewModel.userInfo.height) {
-                        ForEach(91...242, id: \.self) { i in
-                            Text("\(i)")
+                        if !showHeightPicker {
+                            Text("\(userInfoViewModel.userInfo.height) cm").onTapGesture {
+                                showHeightPicker.toggle()
+                            }
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.red)
+                                .frame(width: 20, height: 20)
+                                .onTapGesture {
+                                    showWeightPicker.toggle()
+                                }
+                        } else {
+                            TextField("Height", text: $height).keyboardType(.numberPad)
+                                .frame(width: 100, height: 20)
+                                .onSubmit {
+                                    if let height = Int(height) {
+                                        userInfoViewModel.userInfo.height = height
+                                        userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
+                                        showHeightPicker.toggle()
+                                    }
+                                }
+                                .onReceive(Just(height)) { newValue in
+                                    let filtered = newValue.filter { "0123456789".contains($0) }
+                                    if filtered != newValue {
+                                        self.height = filtered
+                                    }
+                                }
                         }
-                    }.onTapGesture { showHeightPicker.toggle() }
-                    HStack (spacing: 0) {
+                    }
+                    HStack {
                         Text("Weight")
                         Spacer()
-                        Text("\(String(format: "%.1f", userInfoViewModel.userInfo.weight))  kg").onTapGesture { showWeightPicker.toggle() }
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.red)
-                            .onTapGesture { showWeightPicker.toggle() }
-                            .frame(width: 20, height: 20)
-                    }
-                    .onChange(of: userInfoViewModel.userInfo.weight) { _ in
-                        userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
-                    }
-                    CollapsableWheelPicker("Weight", showsPicker: $showWeightPicker, selection: $userInfoViewModel.userInfo.weight) {
-                        ForEach(30...500, id: \.self) { i in
-                            Text("\(i)")
+                        if !showWeightPicker {
+                            Text("\(String(format: "%.1f", userInfoViewModel.userInfo.weight)) kg").onTapGesture {
+                                showWeightPicker.toggle()
+                            }
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.red)
+                                .frame(width: 20, height: 20)
+                                .onTapGesture {
+                                    showWeightPicker.toggle()
+                                }
+                        } else {
+                            TextField("Weight", text: $weight).keyboardType(.decimalPad)
+                                .frame(width: 100, height: 20)
+                                .onSubmit {
+                                    if let weight = Double(weight) {
+                                        userInfoViewModel.userInfo.weight = weight
+                                        userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
+                                        showWeightPicker.toggle()
+                                    }
+                                }
+                                .onReceive(Just(weight)) { newValue in
+                                    let filtered = newValue.filter { "0123456789.".contains($0) }
+                                    if filtered != newValue {
+                                        self.weight = filtered
+                                    }
+                                }
                         }
-                    }.onTapGesture { showWeightPicker.toggle() }
+                    }
+                   
+                
                     HStack {
                         Text("Sex")
                         Spacer()
-                        Picker("Sex", selection: $sex) {
+                        Picker("Sex", selection: $userInfoViewModel.userInfo.sex) {
                             ForEach(Sex.allCases, id: \.self) {
-                                Text($0.rawValue)
+                                Text($0.rawValue).foregroundColor(.white)
                             }
-                        }.onChange(of: sex) { newValue in
-                            userInfoViewModel.userInfo.sex = newValue.rawValue
+                        }.onChange(of: userInfoViewModel.userInfo.sex) { newValue in
+                            userInfoViewModel.userInfo.sex = newValue
                             userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
                         }
                         .frame(width: 150)
@@ -115,6 +145,7 @@ struct ProfileView: View {
             }
             .onAppear {
                 UISegmentedControl.appearance().selectedSegmentTintColor = .red
+                UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected)
                 UIDatePicker.appearance().tintColor = .red
             }
             .listStyle(.insetGrouped)
@@ -130,6 +161,6 @@ struct ProfileView: View {
     }
 }
 
-enum Sex: String, Equatable, CaseIterable {
+enum Sex: String, Equatable, CaseIterable, Codable {
     case male, female
 }

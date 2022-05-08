@@ -9,6 +9,7 @@ struct InitialView: View {
     
     @ObservedObject var auth = AuthenticationService()
     @ObservedObject var sessionRepo = SessionRepository()
+    @ObservedObject var sessionViewModel = SessionViewModel()
     
     @State var hideTabBar = false
     
@@ -24,6 +25,7 @@ struct InitialView: View {
             MainView(showLogin: $showLogin)
                 .environmentObject(sessionRepo)
                 .environmentObject(auth)
+                .environmentObject(sessionViewModel)
                 .tabItem {
                     Text("Tracker")
                     Image(systemName: "hare")

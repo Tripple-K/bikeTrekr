@@ -9,7 +9,7 @@ struct MainView: View {
     @EnvironmentObject var sessionRepo: SessionRepository
     @EnvironmentObject var auth: AuthenticationService
     
-    @ObservedObject var sessionViewModel = SessionViewModel()
+    @EnvironmentObject var sessionViewModel: SessionViewModel
     
     let generatorHeavy = UIImpactFeedbackGenerator(style: .heavy)
     let generatorLight = UIImpactFeedbackGenerator(style: .light)
@@ -23,13 +23,12 @@ struct MainView: View {
     
     @State var scaleStopButton = 1.0
     
-    @AppStorage("timerBeforeSession") var timerBeforeSession: Int = 3
-    
     @State var showOverlayBeforeSession = false
     
     @State var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     @State var time = ""
+    
     var dateFormatter: DateFormatter {
         let fmtr = DateFormatter()
         fmtr.dateFormat = "hh:mm a"
@@ -41,6 +40,8 @@ struct MainView: View {
     @State var showClock = false
     
     @AppStorage("autoPause") var autoPause = true
+    
+    @AppStorage("timerBeforeSession") var timerBeforeSession: Int = 3
     
     var body: some View {
         VStack (spacing: 0) {

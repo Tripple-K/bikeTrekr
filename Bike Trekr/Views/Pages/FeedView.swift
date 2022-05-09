@@ -67,6 +67,9 @@ struct FeedView: View {
             }
             .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
             .onAppear {
+                UISegmentedControl.appearance().selectedSegmentTintColor = .red
+                UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected)
+                
                 if auth.user == nil {
                     showLogin = true
                 }

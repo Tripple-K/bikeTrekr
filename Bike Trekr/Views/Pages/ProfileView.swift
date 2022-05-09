@@ -6,7 +6,9 @@ import Combine
 struct ProfileView: View {
     @State var showLogin = false
     @EnvironmentObject var auth: AuthenticationService
+    let healthAssistant = HealthAssistant()
     @ObservedObject var userInfoViewModel: UserInfoViewModel
+    
     @AppStorage("autoPause") var autoPause = true
     
     @State var showHeightPicker = false
@@ -16,6 +18,15 @@ struct ProfileView: View {
     
     @State var weight = ""
     @State var height = ""
+    
+    var authorizationStatus: String {
+        switch healthAssistant.getAuthorizationStatus() {
+        case .sharingAuthorized:
+            return "Connected Health App"
+        @unknown default:
+            return "Connect Health App"
+        }
+    }
 
     var body: some View {
         VStack {
@@ -35,8 +46,8 @@ struct ProfileView: View {
                                     ediUserName.toggle()
                                 }
                         } else {
-                            TextField("\(userInfoViewModel.userInfo.displayName)", text: $userInfoViewModel.userInfo.displayName)
-                                .frame(width: 100, height: 20)
+                            TextField("Name", text: $userInfoViewModel.userInfo.displayName)
+                                .frame(maxWidth: 75)
                                 .onSubmit {
                                     ediUserName.toggle()
                                     userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
@@ -61,7 +72,7 @@ struct ProfileView: View {
                                 }
                         } else {
                             TextField("Height", text: $height).keyboardType(.numberPad)
-                                .frame(width: 100, height: 20)
+                                .frame(maxWidth: 75)
                                 .onSubmit {
                                     if let height = Int(height) {
                                         userInfoViewModel.userInfo.height = height
@@ -92,7 +103,7 @@ struct ProfileView: View {
                                 }
                         } else {
                             TextField("Weight", text: $weight).keyboardType(.decimalPad)
-                                .frame(width: 100, height: 20)
+                                .frame(maxWidth: 75)
                                 .onSubmit {
                                     if let weight = Double(weight) {
                                         userInfoViewModel.userInfo.weight = weight
@@ -129,18 +140,31 @@ struct ProfileView: View {
                 }.listRowSeparator(.hidden)
                 Section(header: Text("Settings").foregroundColor(.red).bold()) {
                     Toggle("Auto Pause", isOn: $autoPause).tint(.red)
-                    Text("Log Out")
-                        .foregroundColor(.red)
-                        .onTapGesture {
-                            showingAlertLogOut.toggle()
+                    Button(action: {
+                        showingAlertLogOut.toggle()
+                    }, label: {
+                        Text("Log Out")
+                            .foregroundColor(.red)
+                            
+                    }).alert("Are you sure to log out?", isPresented: $showingAlertLogOut) {
+                        Button("Cancel", role: .cancel) { }
+                        Button("Yes", role: .destructive) {
+                            auth.logOut()
+                            showLogin = true
                         }
-                        .alert("Are you sure to log out?", isPresented: $showingAlertLogOut) {
-                            Button("Cancel", role: .cancel) { }
-                            Button("Yes", role: .destructive) {
-                                auth.logOut()
-                                showLogin = true
-                            }
+                    }
+                    Button(action: {
+                        switch healthAssistant.getAuthorizationStatus() {
+                        case .sharingAuthorized:
+                            break
+                        @unknown default:
+                            healthAssistant.requestAuthorization()
                         }
+                    }, label: {
+                        Text(authorizationStatus)
+                            .foregroundColor(.green)
+                    
+                    })
                 }.listRowSeparator(.hidden)
             }
             .onAppear {

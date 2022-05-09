@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string></string>
+	<string>Share your tracking info with Health App</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string></string>
+	<string>Start sharing your success </string>
 	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
 	<string></string>
 	<key>CFBundleDevelopmentRegion</key>

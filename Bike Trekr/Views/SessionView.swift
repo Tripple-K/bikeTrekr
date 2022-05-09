@@ -22,15 +22,17 @@ struct SessionView: View {
                         Text("\(dayFormatter.string(from: session.date))").font(.headline)
                         Text("At \(timeFormatter.string(from: session.date))").foregroundColor(.gray).font(.body)
                         switch session.typeSession {
-                        case .bike:
+                        case .cycling:
                             Image(systemName: "bicycle")
                                 .padding(.top)
-                        case .walk:
+                        case .walking:
                             Image(systemName: "figure.walk")
                                 .padding(.top)
-                        case .run:
+                        case .running:
                             FontIcon.text(.awesome5Solid(code: .running), fontsize: 20)
                                 .padding(.top)
+                        default:
+                            EmptyView()
                         }
                     }
                     Spacer()

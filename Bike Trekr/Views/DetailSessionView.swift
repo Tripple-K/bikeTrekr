@@ -18,7 +18,8 @@ struct DetailSessionView: View {
         
         VStack (spacing: 0) {
             ScrollView(showsIndicators: false) {
-                VStack (spacing: 0) {
+                VStack {
+                    
                     Text("OVERALL")
                         .bold()
                         .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
@@ -32,7 +33,7 @@ struct DetailSessionView: View {
                             Spacer()
                             HStack (spacing: 4) {
                                 Text("\(String(format: "%.2f", session.distance).replacingOccurrences(of: ".", with: ","))").bold()
-                                Text("km").foregroundColor(.gray).italic().font(.body)
+                                Text("km").foregroundColor(.gray).font(.body)
                             }
                         }
                         .padding()
@@ -48,7 +49,7 @@ struct DetailSessionView: View {
                             Spacer()
                             HStack (spacing: 4) {
                                 Text("\(String(format: "%.1f", session.avSpeed).replacingOccurrences(of: ".", with: ","))").bold()
-                                Text("km/h").foregroundColor(.gray).italic().font(.body)
+                                Text("km/h").foregroundColor(.gray).font(.body)
                             }
                             
                         }.padding()
@@ -57,7 +58,7 @@ struct DetailSessionView: View {
                             Spacer()
                             HStack (spacing: 4) {
                                 Text("\(String(format: "%.1f", session.maxSpeed).replacingOccurrences(of: ".", with: ","))").bold()
-                                Text("km/h").foregroundColor(.gray).italic().font(.body)
+                                Text("km/h").foregroundColor(.gray).font(.body)
                             }
                             
                         }.padding()
@@ -65,13 +66,13 @@ struct DetailSessionView: View {
                             Text("Session Type")
                             Spacer()
                             switch session.typeSession {
-                            case .bike:
+                            case .cycling:
                                 Image(systemName: "bicycle")
                                     .frame(width: 24, height: 24)
-                            case .walk:
+                            case .walking:
                                 Image(systemName: "figure.walk")
                                     .frame(width: 24, height: 24)
-                            case .run:
+                            case .running:
                                 FontIcon.text(.awesome5Solid(code: .running), fontsize: 20).frame(width: 24, height: 24)
                             default:
                                 EmptyView()
@@ -81,6 +82,7 @@ struct DetailSessionView: View {
                     .font(.headline)
                     .background(RoundedRectangle(cornerRadius: 10).fill(Color("darkGray")))
                     .padding()
+                    
                     Text("MAP")
                         .bold()
                         .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
@@ -110,7 +112,7 @@ struct DetailSessionView: View {
             DetailMapController(locations: session.locations)
                 .ignoresSafeArea()
                 .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
-                .overlay {
+                .overlay (
                     VStack (alignment: .leading) {
                         Button(action: {
                             self.fullscreenMap = false
@@ -125,8 +127,7 @@ struct DetailSessionView: View {
                             }
                             .frame(width: 100, height: 40)
                         })
-                    }
-                }
+                    }, alignment: .topLeading)
         }
     }
 }

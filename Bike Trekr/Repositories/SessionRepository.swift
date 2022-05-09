@@ -44,7 +44,7 @@ class SessionRepository: ObservableObject {
                 guard let documents = querySnapshot?.documents else { return }
                 
                 self.sessions = documents.compactMap { document -> Session? in
-                    return try! document.data(as: Session.self)
+                    return try? document.data(as: Session.self)
                 }
                 self.sessions.sort(by: {
                     $0.date > $1.date

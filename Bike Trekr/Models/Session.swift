@@ -1,6 +1,7 @@
 import SwiftUI
 import FirebaseFirestoreSwift
 import CoreLocation
+import HealthKit
 
 struct Session: Identifiable, Codable {
     @DocumentID var id: String?
@@ -17,7 +18,22 @@ struct Session: Identifiable, Codable {
     var maxSpeed: Double {
         return locations.max(by: {$0.speed < $1.speed})?.speed ?? 0
     }
-    var typeSession: TypeSession = .run
+    var typeSession: SessionType = .running
     var userId: String? = ""
     var locations = [Location]()
 }
+
+enum SessionType: String, Equatable, CaseIterable, Codable {
+    case running, cycling, walking
+}
+
+extension SessionType {
+    var activityType: HKWorkoutActivityType {
+        switch self {
+        case .running: return .running
+        case .walking: return .walking
+        case .cycling: return .cycling
+        }
+    }
+}
+

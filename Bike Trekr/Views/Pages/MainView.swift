@@ -106,6 +106,7 @@ struct MainView: View {
                         ZStack {
                             Circle()
                                 .frame(width: 50.0, height: 50.0)
+                                .foregroundColor(.red)
                             
                             Image(systemName: "gearshape.fill")
                                 .foregroundColor(.white)
@@ -115,7 +116,6 @@ struct MainView: View {
                         .sheet(isPresented: $showSessionSetUp) {
                             SessionSettingsView(typeSession: $sessionViewModel.session.typeSession, timer: $timerBeforeSession)
                         }
-                        .foregroundColor(.red)
                     }
                     ZStack {
                         RoundedRectangle(cornerSize: CGSize(width: 10, height: 10))
@@ -137,20 +137,21 @@ struct MainView: View {
                             }
                             Spacer()
                             switch sessionViewModel.session.typeSession {
-                            case .bike:
+                            case .cycling:
                                 Image(systemName: "bicycle")
                                     .frame(width: 50.0, height: 50.0).padding(.horizontal)
                                     .foregroundColor(.white)
-                            case .walk:
+                            case .walking:
                                 Image(systemName: "figure.walk")
                                     .frame(width: 50.0, height: 50.0).padding(.horizontal)
                                     .foregroundColor(.white)
-                            case .run:
+                            case .running:
                                 FontIcon.text(.awesome5Solid(code: .running), fontsize: 20)
                                     .frame(width: 50.0, height: 50.0).padding(.horizontal)
                                     .foregroundColor(.white)
                                 
-                                
+                            default:
+                                EmptyView()
                             }
                             
                         }

@@ -31,8 +31,6 @@ struct SessionView: View {
                         case .running:
                             FontIcon.text(.awesome5Solid(code: .running), fontsize: 20)
                                 .padding(.top)
-                        default:
-                            EmptyView()
                         }
                     }
                     Spacer()

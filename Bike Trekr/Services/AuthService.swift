@@ -6,7 +6,7 @@ import FirebaseDatabase
 
 class AuthenticationService: ObservableObject {
     
-    @Published var user: User?
+    @Published var user: User? = Auth.auth().currentUser
     private var authenticationStateHandler: AuthStateDidChangeListenerHandle?
     
     init() {

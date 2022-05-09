@@ -1,9 +1,11 @@
 import Foundation
 import Combine
+import FirebaseFirestore
 
 class UserInfoViewModel: ObservableObject, Identifiable {
-    private let userRepository = UserRepository()
     @Published var userInfo: UserInfo
+    private let path: String = "usersInfo"
+    private let store = Firestore.firestore()
     private var cancellables: Set<AnyCancellable> = []
     var id = ""
     
@@ -15,11 +17,23 @@ class UserInfoViewModel: ObservableObject, Identifiable {
             .store(in: &cancellables)
     }
     
-    func update(userInfo: UserInfo) {
-        userRepository.update(userInfo)
+    func update() {
+        guard let userId = userInfo.id else { return }
+        do {
+            try store.collection(path).document(userId).setData(from: userInfo)
+        } catch {
+            print("Unable to update user: \(error.localizedDescription).")
+        }
     }
     
     func remove() {
-        userRepository.remove(userInfo)
+        
+        guard let userId = userInfo.id else { return }
+        
+        store.collection(path).document(userId).delete { error in
+            if let error = error {
+                print("Unable to remove user: \(error.localizedDescription)")
+            }
+        }
     }
 }

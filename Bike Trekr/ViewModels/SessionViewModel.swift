@@ -11,10 +11,8 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
     @Published var speed = CLLocationSpeed()
     @Published var status: StatusSession = .stop
     
-    
     private var cancellables: Set<AnyCancellable> = []
     private let manager = CLLocationManager()
-    let healthAssistant = HealthAssistant()
     var canStart = false
     
     var seconds = 0
@@ -90,7 +88,7 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
     }
     
     func finish() {
-        healthAssistant.didAddSession(with: session)
+        HealthAssistant.shared.didAddSession(with: session)
         canStart = false
         speed = 0
         status = .stop

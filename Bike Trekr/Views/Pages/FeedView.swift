@@ -4,11 +4,9 @@
 import SwiftUI
 
 struct FeedView: View {
-    @Binding var showLogin: Bool
-    @EnvironmentObject var sessionRepo: SessionRepository
+
     @EnvironmentObject var auth: AuthenticationService
     @Environment(\.colorScheme) var colorScheme
-    @ObservedObject var userRepo = UserRepository()
     
     @State var period: Period = .week
     @State var showProfile = false
@@ -63,18 +61,14 @@ struct FeedView: View {
                                 .foregroundColor(colorScheme == .dark ? .white : .black)
                         }
                     }
+                    if sessions.isEmpty {
+                        ProgressView()
+                    }
                 }
             }
             .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-            .onAppear {
-                UISegmentedControl.appearance().selectedSegmentTintColor = .red
-                UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected)
-                
-                if auth.user == nil {
-                    showLogin = true
-                }
-                sessionRepo.get()
-                sessions = sessionRepo.sessions.filter { session in
+            .onReceive(SessionRepository.shared.$sessions) { sessions in
+                self.sessions = sessions.filter { session in
                     var filterDate: Date? = Date()
                     switch period {
                     case .week:
@@ -91,10 +85,9 @@ struct FeedView: View {
                     }
                     return session.date > filterDate
                 }
-                
             }
             .onChange(of: period) { newValue in
-                sessions = sessionRepo.sessions.filter { session in
+                sessions = SessionRepository.shared.sessions.filter { session in
                     var filterDate: Date? = Date()
                     switch period {
                     case .week:
@@ -142,9 +135,7 @@ struct FeedView: View {
             .background(Color("background"))
         }
         .sheet(isPresented: $showProfile) {
-            if let user = userRepo.user {
-                ProfileView(userInfoViewModel: UserInfoViewModel(userInfo: user))
-            }
+            ProfileView()
         }
     }
 }

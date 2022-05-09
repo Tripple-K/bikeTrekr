@@ -7,10 +7,12 @@ import Combine
 
 class UserRepository: ObservableObject {
     
+    static var shared = UserRepository()
+    
     private let path: String = "usersInfo"
     private let store = Firestore.firestore()
     
-    @Published var user: UserInfo?
+    @Published var userInfo: UserInfo?
     
     var userId = ""
     
@@ -28,7 +30,6 @@ class UserRepository: ObservableObject {
         authenticationService.$user
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
-                
                 self?.get()
             }
             .store(in: &cancellables)
@@ -47,7 +48,7 @@ class UserRepository: ObservableObject {
                 guard let document = querySnapshot?.documents.first else {
                     return
                 }
-                self.user = try? document.data(as: UserInfo.self)
+                self.userInfo = try? document.data(as: UserInfo.self)
             }
     }
     
@@ -75,29 +76,7 @@ class UserRepository: ObservableObject {
             newUser.id = userId
             _ = try store.collection(path).addDocument(from: newUser)
         } catch {
-            fatalError("Unable to add user: \(error.localizedDescription).")
-        }
-    }
-    
-    func update(_ user: UserInfo) {
-        
-        guard let userId = user.id else { return }
-        do {
-            
-            try store.collection(path).document(userId).setData(from: user)
-        } catch {
-            fatalError("Unable to update user: \(error.localizedDescription).")
-        }
-    }
-    
-    func remove(_ user: UserInfo) {
-        
-        guard let userId = user.id else { return }
-        
-        store.collection(path).document(userId).delete { error in
-            if let error = error {
-                print("Unable to remove user: \(error.localizedDescription)")
-            }
+            print("Unable to add user: \(error.localizedDescription).")
         }
     }
 }

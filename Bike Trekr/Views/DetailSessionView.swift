@@ -74,8 +74,6 @@ struct DetailSessionView: View {
                                     .frame(width: 24, height: 24)
                             case .running:
                                 FontIcon.text(.awesome5Solid(code: .running), fontsize: 20).frame(width: 24, height: 24)
-                            default:
-                                EmptyView()
                             }
                         }.padding()
                     }

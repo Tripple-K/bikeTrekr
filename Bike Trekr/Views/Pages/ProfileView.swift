@@ -2,28 +2,26 @@
 
 import SwiftUI
 import Combine
+import FirebaseAuth
 
 struct ProfileView: View {
-    @State var showLogin = false
+    @EnvironmentObject var userInfoViewModel: UserInfoViewModel
     @EnvironmentObject var auth: AuthenticationService
-    let healthAssistant = HealthAssistant()
-    @ObservedObject var userInfoViewModel: UserInfoViewModel
-    
     @AppStorage("autoPause") var autoPause = true
     
     @State var showHeightPicker = false
     @State var showWeightPicker = false
-    @State var showingAlertLogOut = false
+    @State var showingAlertLogOut = false 
     @State var ediUserName = false
     
     @State var weight = ""
     @State var height = ""
     
     var authorizationStatus: String {
-        switch healthAssistant.getAuthorizationStatus() {
+        switch HealthAssistant.shared.getAuthorizationStatus() {
         case .sharingAuthorized:
             return "Connected Health App"
-        @unknown default:
+        default:
             return "Connect Health App"
         }
     }
@@ -50,12 +48,12 @@ struct ProfileView: View {
                                 .frame(maxWidth: 75)
                                 .onSubmit {
                                     ediUserName.toggle()
-                                    userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
+                                    userInfoViewModel.update()
                                 }
                         }
                     }
                     DatePicker("Birthday", selection: $userInfoViewModel.userInfo.birthday, displayedComponents: [.date]).onChange(of: userInfoViewModel.userInfo.birthday) { _ in
-                        userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
+                        userInfoViewModel.update()
                     }
                     HStack {
                         Text("Height")
@@ -76,7 +74,7 @@ struct ProfileView: View {
                                 .onSubmit {
                                     if let height = Int(height) {
                                         userInfoViewModel.userInfo.height = height
-                                        userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
+                                        userInfoViewModel.update()
                                         showHeightPicker.toggle()
                                     }
                                 }
@@ -107,7 +105,7 @@ struct ProfileView: View {
                                 .onSubmit {
                                     if let weight = Double(weight) {
                                         userInfoViewModel.userInfo.weight = weight
-                                        userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
+                                        userInfoViewModel.update()
                                         showWeightPicker.toggle()
                                     }
                                 }
@@ -130,7 +128,7 @@ struct ProfileView: View {
                             }
                         }.onChange(of: userInfoViewModel.userInfo.sex) { newValue in
                             userInfoViewModel.userInfo.sex = newValue
-                            userInfoViewModel.update(userInfo: userInfoViewModel.userInfo)
+                            userInfoViewModel.update()
                         }
                         .frame(width: 150)
                         .pickerStyle(.segmented)
@@ -150,15 +148,14 @@ struct ProfileView: View {
                         Button("Cancel", role: .cancel) { }
                         Button("Yes", role: .destructive) {
                             auth.logOut()
-                            showLogin = true
                         }
                     }
                     Button(action: {
-                        switch healthAssistant.getAuthorizationStatus() {
+                        switch HealthAssistant.shared.getAuthorizationStatus() {
                         case .sharingAuthorized:
                             break
-                        @unknown default:
-                            healthAssistant.requestAuthorization()
+                        default:
+                            HealthAssistant.shared.requestAuthorization()
                         }
                     }, label: {
                         Text(authorizationStatus)
@@ -167,20 +164,7 @@ struct ProfileView: View {
                     })
                 }.listRowSeparator(.hidden)
             }
-            .onAppear {
-                UISegmentedControl.appearance().selectedSegmentTintColor = .red
-                UISegmentedControl.appearance().setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected)
-                UIDatePicker.appearance().tintColor = .red
-            }
             .listStyle(.insetGrouped)
-        }
-        .onAppear {
-            if auth.user == nil {
-                showLogin = true
-            }
-        }
-        .fullScreenCover(isPresented: $showLogin) {
-            LoginView(showLogin: $showLogin)
         }
     }
 }

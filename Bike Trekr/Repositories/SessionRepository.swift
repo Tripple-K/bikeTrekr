@@ -7,6 +7,8 @@ import Combine
 
 class SessionRepository: ObservableObject {
     
+    static var shared = SessionRepository()
+    
     private let path: String = "sessions"
     private let store = Firestore.firestore()
     

@@ -1,8 +1,8 @@
 import HealthKit
 
 struct HealthAssistant {
+    static var shared = HealthAssistant()
     let healthStore = HKHealthStore()
-    
     
     func requestAuthorization() {
 
@@ -49,8 +49,6 @@ struct HealthAssistant {
             }
         }
     }
-    
-    
     
     private func processHealthSample(with session: Session) -> HKWorkout? {
         let totalEnergyBurned = HKQuantity(unit: .jouleUnit(with: .kilo), doubleValue: session.distance)

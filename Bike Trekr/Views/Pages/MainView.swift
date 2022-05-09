@@ -4,11 +4,7 @@ import SwiftUIFontIcon
 
 struct MainView: View {
     
-    @Binding var showLogin: Bool
-    
-    @EnvironmentObject var sessionRepo: SessionRepository
     @EnvironmentObject var auth: AuthenticationService
-    
     @EnvironmentObject var sessionViewModel: SessionViewModel
     
     let generatorHeavy = UIImpactFeedbackGenerator(style: .heavy)
@@ -149,9 +145,6 @@ struct MainView: View {
                                 FontIcon.text(.awesome5Solid(code: .running), fontsize: 20)
                                     .frame(width: 50.0, height: 50.0).padding(.horizontal)
                                     .foregroundColor(.white)
-                                
-                            default:
-                                EmptyView()
                             }
                             
                         }
@@ -249,14 +242,13 @@ struct MainView: View {
         checkSpeed = 0
         
         guard let userId = auth.user?.uid else {
-            showLogin.toggle()
             return
         }
         
         sessionViewModel.session.userId = userId
         
         if sessionViewModel.session.distance > 0 {
-            sessionRepo.add(sessionViewModel.session)
+            SessionRepository.shared.add(sessionViewModel.session)
         }
         
         sessionViewModel.finish()

@@ -7,9 +7,6 @@ import AuthenticationServices
 
 struct LoginView: View {
     @Environment(\.colorScheme) var colorScheme
-    @ObservedObject var userRepo = UserRepository()
-    
-    @Binding var showLogin: Bool
     @State var currentNonce:String?
     
     var body: some View {
@@ -21,16 +18,11 @@ struct LoginView: View {
                 VStack (spacing: 0) {
                     Group {
                         Button(action: {
-                            if Auth.auth().currentUser != nil {
-                                showLogin = false
-                            } else {
-                                GitHub.shared.processLogin {
-                                    showLogin = false
-                                    guard let user = Auth.auth().currentUser, let name = user.displayName, let email = user.email else { return }
-                                    userRepo.isExist(with: email, and: user.uid) { exist in
-                                        if !exist {
-                                            userRepo.add(UserInfo(userId: user.uid, displayName: name, email: email))
-                                        }
+                            GitHub.shared.processLogin {
+                                guard let user = Auth.auth().currentUser, let name = user.displayName, let email = user.email else { return }
+                                UserRepository.shared.isExist(with: email, and: user.uid) { exist in
+                                    if !exist {
+                                        UserRepository.shared.add(UserInfo(userId: user.uid, displayName: name, email: email))
                                     }
                                 }
                             }
@@ -108,14 +100,13 @@ struct LoginView: View {
                         print(error?.localizedDescription as Any)
                         return
                     }
-                    showLogin = false
                     guard let user = Auth.auth().currentUser else {
                         print("No user")
                         return
                     }
-                    userRepo.isExist(with: user.email!, and: user.uid) { exist in
+                    UserRepository.shared.isExist(with: user.email!, and: user.uid) { exist in
                         if !exist {
-                            userRepo.add(UserInfo(userId: user.uid, displayName: user.displayName ?? "User", email: user.email!))
+                            UserRepository.shared.add(UserInfo(userId: user.uid, displayName: user.displayName ?? "User", email: user.email!))
                         }
                     }
                 }

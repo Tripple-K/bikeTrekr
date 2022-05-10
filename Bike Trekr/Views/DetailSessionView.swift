@@ -41,7 +41,7 @@ struct DetailSessionView: View {
                             Text("Duration")
                             Spacer()
                             HStack (spacing: 4) {
-                                Text("\(session.duration)")
+                                Text("\(String(format: "%02d",  self.session.duration / 3600)):\(String(format: "%02d", ( self.session.duration % 3600) / 60)):\(String(format: "%02d", ( self.session.duration % 3600) % 60))")
                             }
                         }.padding()
                         HStack {

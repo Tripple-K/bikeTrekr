@@ -4,18 +4,21 @@ import Combine
 import MapKit
 import FirebaseAuth
 import HealthKit
+import FirebaseFirestore
+import FirebaseDatabaseSwift
 
 class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationManagerDelegate {
     @Published var session: Session
     @Published var region = MKCoordinateRegion()
     @Published var speed = CLLocationSpeed()
     @Published var status: StatusSession = .stop
+    @Published var duration = "00:00:00"
     
+    private let store = Firestore.firestore()
     private var cancellables: Set<AnyCancellable> = []
     private let manager = CLLocationManager()
     var canStart = false
-    
-    var seconds = 0
+
     var timer = Timer()
     
     override init () {
@@ -27,6 +30,12 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
         manager.activityType = .fitness
         manager.distanceFilter = 5
         manager.startUpdatingLocation()
+        $session
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                self?.duration = "\(String(format: "%02d",  $0.duration / 3600)):\(String(format: "%02d", ($0.duration % 3600) / 60)):\(String(format: "%02d", ($0.duration % 3600) % 60))"
+            }
+            .store(in: &cancellables)
     }
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
@@ -56,12 +65,11 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
     }
     
     func pause() {
-       
+        
         switch status {
         case .pause:
             timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
-                self.seconds += 1
-                self.session.duration = "\(String(format: "%02d", self.seconds / 3600)):\(String(format: "%02d", (self.seconds % 3600) / 60)):\(String(format: "%02d", (self.seconds % 3600) % 60))"
+                self.session.duration += 1
             }
             status = .running
         case .stop:
@@ -82,12 +90,13 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
         manager.startMonitoringSignificantLocationChanges()
         
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
-            self.seconds += 1
-            self.session.duration = "\(String(format: "%02d", self.seconds / 3600)):\(String(format: "%02d", (self.seconds % 3600) / 60)):\(String(format: "%02d", (self.seconds % 3600) % 60))"
+            self.session.duration += 1
         }
+        getTemp()
     }
     
     func finish() {
+        removeTemp()
         HealthAssistant.shared.didAddSession(with: session)
         canStart = false
         speed = 0
@@ -99,8 +108,92 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
         session = Session()
         session.typeSession = type
         timer.invalidate()
-        seconds = 0
         
+    }
+    
+    func saveTemp() {
+        guard status != .stop else { return }
+        guard let userId = UserRepository.shared.userInfo?.userId else { return }
+        
+        
+        store.collection("session")
+            .whereField("userId", isEqualTo: userId)
+            .getDocuments { snapshop, error in
+                if let error = error {
+                    print(error.localizedDescription)
+                }
+                
+                guard let document = snapshop?.documents.first else {
+                    do {
+                        self.session.userId = userId
+                        _ = try self.store.collection("session").addDocument(from: self.session)
+                    } catch {
+                        print("Unable to add session: \(error.localizedDescription).")
+                    }
+                    return
+                }
+                
+                do {
+                    self.session.userId = userId
+                    try self.store.collection("session").document(document.documentID).setData(from: self.session)
+                } catch {
+                    print("Unable to update session: \(error.localizedDescription).")
+                }
+            }
+        
+    }
+    
+    func removeTemp() {
+        guard let userId = UserRepository.shared.userInfo?.userId else { return }
+        
+        store.collection("session")
+            .whereField("userId", isEqualTo: userId)
+            .getDocuments { snapshop, error in
+                if let error = error {
+                    print(error.localizedDescription)
+                }
+                
+                guard let document = snapshop?.documents.first else {
+                    return
+                }
+                
+                self.store.collection("session").document(document.documentID).delete { error in
+                    if let error = error {
+                        print(error.localizedDescription)
+                    }
+                }
+            }
+        
+    }
+    
+    func getTemp() {
+        guard let userId = UserRepository.shared.userInfo?.userId else { return }
+        
+        store.collection("session")
+            .whereField("userId", isEqualTo: userId)
+            .addSnapshotListener { snapshop, error in
+                if let error = error {
+                    print(error.localizedDescription)
+                }
+                
+                guard let document = snapshop?.documents.first else {
+                    return
+                }
+                if let session = try? document.data(as: Session.self) {
+                    self.session = session
+                    self.loadPolyline()
+                }
+            }
+    }
+    
+    func loadPolyline() {
+        let coordinates = session.locations.sorted(by: {
+            $0.timestamp < $1.timestamp
+        }).compactMap { location -> CLLocationCoordinate2D in
+            return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+        }
+        let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+        MapView.mapView.addOverlay(polyline, level: .aboveRoads)
     }
 }
 

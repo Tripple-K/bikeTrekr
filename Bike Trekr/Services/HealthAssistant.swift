@@ -53,10 +53,6 @@ struct HealthAssistant {
     private func processHealthSample(with session: Session) -> HKWorkout? {
         let totalEnergyBurned = HKQuantity(unit: .jouleUnit(with: .kilo), doubleValue: session.distance)
         let distance = HKQuantity(unit: .meterUnit(with: .kilo), doubleValue: session.distance)
-        let dateFormatter = DateFormatter(with: "hh:mm:ss")
-        if let duration = dateFormatter.date(from: session.duration) {
-            return  HKWorkout(activityType: session.typeSession.activityType, start: session.date, end: .now, duration: duration.timeIntervalSince(session.date), totalEnergyBurned: totalEnergyBurned, totalDistance: distance, metadata: nil)
-        }
-        return nil
+        return HKWorkout(activityType: session.typeSession.activityType, start: session.date, end: .now, duration: TimeInterval(session.duration), totalEnergyBurned: totalEnergyBurned, totalDistance: distance, metadata: nil)
     }
 }

@@ -1,5 +1,6 @@
 import SwiftUI
 import FirebaseAuth
+import MapKit
 
 struct InitialView: View {
     @State var start: Bool = false
@@ -10,7 +11,7 @@ struct InitialView: View {
     @ObservedObject var sessionRepo = SessionRepository()
     
     var body: some View {
-        TabView (selection:$selection) {
+        TabView (selection: $selection) {
             FeedView()
                 .tabItem {
                     Text("Feed")
@@ -30,7 +31,9 @@ struct InitialView: View {
             tabBarAppearance.backgroundColor = .clear
             UITabBar.appearance().standardAppearance = tabBarAppearance
             UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
-            
+        }
+        .onReceive(UserRepository.shared.$userInfo) { _ in
+            sessionViewModel.getTemp()
         }
     }
 }

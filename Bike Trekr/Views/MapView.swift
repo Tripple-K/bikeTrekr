@@ -6,18 +6,18 @@ import UIKit
 struct MapView: UIViewRepresentable {
     
     typealias UIViewType = MKMapView
-    @ObservedObject var manager: SessionViewModel
+    @EnvironmentObject var manager: SessionViewModel
+    static let mapView = MKMapView()
 
     func makeUIView(context: Context) -> MKMapView {
-        let mapView = MKMapView()
         
-        mapView.delegate = context.coordinator
-        mapView.setRegion(manager.region, animated: true)
+        MapView.mapView.delegate = context.coordinator
+        MapView.mapView.setRegion(manager.region, animated: true)
         
-        mapView.showsUserLocation = true
-        mapView.userTrackingMode = .followWithHeading
-        mapView.isUserInteractionEnabled = false
-        return mapView
+        MapView.mapView.showsUserLocation = true
+        MapView.mapView.userTrackingMode = .followWithHeading
+        MapView.mapView.isUserInteractionEnabled = false
+        return MapView.mapView
     }
     
     func updateUIView(_ uiView: MKMapView, context: Context) {

@@ -67,7 +67,7 @@ struct SessionView: View {
                     Text("av. speed").foregroundColor(.gray).font(.body)
                 }.frame(maxWidth: .infinity)
                 VStack (alignment: .trailing) {
-                    Text("\(session.duration)").font(.headline)
+                    Text("\(String(format: "%02d",  self.session.duration / 3600)):\(String(format: "%02d", ( self.session.duration % 3600) / 60)):\(String(format: "%02d", ( self.session.duration % 3600) % 60))").font(.headline)
                     Text("time").foregroundColor(.gray).font(.body)
                 }.frame(maxWidth: .infinity)
             }

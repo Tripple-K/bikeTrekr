@@ -3,7 +3,7 @@ import MapKit
 import SwiftUIFontIcon
 
 struct MainView: View {
-    
+    @Environment(\.scenePhase) var scenePhase
     @EnvironmentObject var auth: AuthenticationService
     @EnvironmentObject var sessionViewModel: SessionViewModel
     
@@ -13,27 +13,23 @@ struct MainView: View {
     let gradientColors: [Color] = [.clear, .clear.opacity(0.5), .black.opacity(0.7), .black, .black, .black.opacity(0.7), .clear.opacity(0.5), .clear]
     @State var opacity: Double = 0
     
+    
     @State var checkSpeed = 0
-    
     @State var showSessionSetUp: Bool = false
-    
     @State var scaleStopButton = 1.0
-    
     @State var showOverlayBeforeSession = false
-    
+    @State var showAlertLocationNeeded = false
+    @State var showClock = false
     @State var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    
     @State var time = ""
+    
+    @State var mapView = MapView()
     
     var dateFormatter: DateFormatter {
         let fmtr = DateFormatter()
         fmtr.dateFormat = "hh:mm a"
         return fmtr
     }
-    
-    @State var showAlertLocationNeeded = false
-    
-    @State var showClock = false
     
     @AppStorage("autoPause") var autoPause = true
     
@@ -64,7 +60,7 @@ struct MainView: View {
                         Text("av. speed").font(Font.custom("Monaco", size: 18)).foregroundColor(Color.gray)
                     }.padding(.horizontal)
                 }
-                Text("\(showClock ? time : sessionViewModel.session.duration)".lowercased())
+                Text("\(showClock ? time : sessionViewModel.duration)".lowercased())
                     .font(Font.custom("Monaco", size: 54.0))
                     .padding(.top)
                     .onTapGesture {
@@ -80,7 +76,7 @@ struct MainView: View {
                 GeometryReader { proxy in
                     
                     VStack {
-                        MapView(manager: sessionViewModel)
+                        mapView
                             .frame(width: proxy.size.width, height: proxy.size.width, alignment: .bottom)
                             .opacity(opacity)
                             .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .top, endPoint: .bottom))
@@ -97,6 +93,7 @@ struct MainView: View {
                         }
                     }
                 }
+                
                 HStack {
                     if sessionViewModel.status == .stop {
                         ZStack {
@@ -221,7 +218,17 @@ struct MainView: View {
             if sessionViewModel.speed > 1 && sessionViewModel.status == .pause {
                 self.pause()
             }
-            
+        }
+        .onChange(of: scenePhase) { phase in
+            switch phase {
+            case .background:
+                sessionViewModel.saveTemp()
+            default:
+                break
+            }
+        }
+        .onDisappear {
+            sessionViewModel.saveTemp()
         }
     }
     

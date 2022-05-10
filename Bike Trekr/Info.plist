@@ -2,12 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSHealthUpdateUsageDescription</key>
-	<string>Share your tracking info with Health App</string>
-	<key>NSHealthShareUsageDescription</key>
-	<string>Start sharing your success </string>
-	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
-	<string></string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -39,6 +33,12 @@
 	<true/>
 	<key>Location</key>
 	<string></string>
+	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
+	<string></string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>Start sharing your success </string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Share your tracking info with Health App</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string></string>
 	<key>NSLocationWhenInUseUsageDescription</key>

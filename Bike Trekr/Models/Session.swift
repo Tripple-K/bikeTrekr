@@ -6,12 +6,13 @@ import HealthKit
 struct Session: Identifiable, Codable {
     @DocumentID var id: String?
     var distance: Double = 0
-    var duration: String = "00:00:00"
+    var duration: Int = 0
     var date: Date = Date()
     var avSpeed: Double {
         let speeds = locations.compactMap { location -> CLLocationSpeed in
             return location.speed > 0 ? location.speed : 0
         }
+        guard !locations.isEmpty else { return 0 }
         return speeds.reduce(0, +) / Double(locations.count)
     }
     

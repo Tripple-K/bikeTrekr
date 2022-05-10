@@ -62,7 +62,7 @@ class SessionRepository: ObservableObject {
             newSession.userId = userId
             _ = try store.collection(path).addDocument(from: newSession)
         } catch {
-            fatalError("Unable to add session: \(error.localizedDescription).")
+            print("Unable to add session: \(error.localizedDescription).")
         }
     }
     
@@ -75,7 +75,7 @@ class SessionRepository: ObservableObject {
             
             try store.collection(path).document(sessionId).setData(from: session)
         } catch {
-            fatalError("Unable to update card: \(error.localizedDescription).")
+            print("Unable to update session: \(error.localizedDescription).")
         }
     }
     

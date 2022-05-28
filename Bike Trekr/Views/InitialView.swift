@@ -13,6 +13,7 @@ struct InitialView: View {
     var body: some View {
         TabView (selection: $selection) {
             FeedView()
+                .environmentObject(userViewModel)
                 .tabItem {
                     Text("Feed")
                     Image(systemName: "list.dash")

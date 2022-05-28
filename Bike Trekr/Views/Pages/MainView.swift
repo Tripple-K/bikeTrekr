@@ -1,6 +1,7 @@
 import SwiftUI
 import MapKit
 import SwiftUIFontIcon
+import Combine
 
 struct MainView: View {
     @Environment(\.scenePhase) var scenePhase
@@ -13,23 +14,16 @@ struct MainView: View {
     let gradientColors: [Color] = [.clear, .clear.opacity(0.5), .black.opacity(0.7), .black, .black, .black.opacity(0.7), .clear.opacity(0.5), .clear]
     @State var opacity: Double = 0
     
-    
     @State var checkSpeed = 0
     @State var showSessionSetUp: Bool = false
     @State var scaleStopButton = 1.0
     @State var showOverlayBeforeSession = false
     @State var showAlertLocationNeeded = false
-    @State var showClock = false
+
+    @State var showGoalSheet = false
     @State var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    @State var time = ""
-    
+
     @State var mapView = MapView()
-    
-    var dateFormatter: DateFormatter {
-        let fmtr = DateFormatter()
-        fmtr.dateFormat = "hh:mm a"
-        return fmtr
-    }
     
     @AppStorage("autoPause") var autoPause = true
     
@@ -37,45 +31,14 @@ struct MainView: View {
     
     var body: some View {
         VStack (spacing: 0) {
-            VStack (spacing: 0) {
-                VStack {
-                    HStack {
-                        Text("\(sessionViewModel.speed * 3.6 > 0 ? (String(format: "%.1f", sessionViewModel.speed * 3.6)) : "0.0")").font(Font.custom("Monaco", size: 36.0))
-                        Text("km/h").font(Font.custom("Monaco", size: 18)).padding(.top, 13)
-                    }
-                    Text("speed").font(Font.custom("Monaco", size: 18)).foregroundColor(Color.gray)
-                }
-                VStack {
-                    HStack {
-                        Text("\(String(format: "%.2f", sessionViewModel.session.distance))").font(Font.custom("Monaco", size: 36.0).italic())
-                        Text("km").font(Font.custom("Monaco", size: 18.0).italic()).padding(.top, 13)
-                        Spacer()
-                        Text("\(sessionViewModel.session.avSpeed * 3.6 > 0 ? (String(format: "%.1f", sessionViewModel.session.avSpeed * 3.6)) : "0.0")").font(Font.custom("Monaco", size: 36.0).italic())
-                        Text("km/h").font(Font.custom("Monaco", size: 18).italic()).padding(.top, 13)
-                    }
-                    .padding(.horizontal)
-                    HStack {
-                        Text("distance").font(Font.custom("Monaco", size: 18)).foregroundColor(Color.gray)
-                        Spacer()
-                        Text("av. speed").font(Font.custom("Monaco", size: 18)).foregroundColor(Color.gray)
-                    }.padding(.horizontal)
-                }
-                Text("\(showClock ? time : sessionViewModel.duration)".lowercased())
-                    .font(Font.custom("Monaco", size: 54.0))
-                    .padding(.top)
-                    .onTapGesture {
-                        showClock.toggle()
-                    }
-                    .onReceive(timer) { _ in
-                        time = dateFormatter.string(from: .now)
-                    }
-            }
+            SessionCurrentInfoView().environmentObject(sessionViewModel)
             
             VStack (spacing: 0) {
                 
                 GeometryReader { proxy in
                     
-                    VStack {
+                    ZStack {
+                       
                         mapView
                             .frame(width: proxy.size.width, height: proxy.size.width, alignment: .bottom)
                             .opacity(opacity)
@@ -84,7 +47,6 @@ struct MainView: View {
                             .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .bottomLeading, endPoint: .topTrailing))
                             .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .topLeading, endPoint: .bottomTrailing))
                     }.frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
-                    
                 }
                 .onAppear {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
@@ -93,6 +55,8 @@ struct MainView: View {
                         }
                     }
                 }
+                
+                
                 
                 HStack {
                     if sessionViewModel.status == .stop {
@@ -164,7 +128,7 @@ struct MainView: View {
                     .fullScreenCover(isPresented: $showOverlayBeforeSession, onDismiss: {
                         self.start()
                     }) {
-                        StartUpSessionView(show: $showOverlayBeforeSession, timeBeforeSession: $timerBeforeSession)
+                        StartUpSessionView(timeBeforeSession: $timerBeforeSession)
                     }
                     
                     
@@ -259,6 +223,24 @@ struct MainView: View {
         }
         
         sessionViewModel.finish()
-        
     }
+    
+    func validate(text: String, with regex: String) -> Bool {
+            guard let gRegex = try? NSRegularExpression(pattern: regex) else {
+                return false
+            }
+        
+            let range = NSRange(location: 0, length: text.utf16.count)
+            
+            if gRegex.firstMatch(in: text, options: [], range: range) != nil {
+                return true
+            }
+            
+            return false
+    }
+}
+
+
+enum GoalType: String, CaseIterable, Codable {
+    case duration, distance, speed, none = "Set a goal"
 }

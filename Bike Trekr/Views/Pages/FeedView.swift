@@ -6,6 +6,7 @@ import SwiftUI
 struct FeedView: View {
 
     @EnvironmentObject var auth: AuthenticationService
+    @EnvironmentObject var userInfoViewModel: UserInfoViewModel
     @Environment(\.colorScheme) var colorScheme
     
     @State var period: Period = .week
@@ -46,13 +47,15 @@ struct FeedView: View {
                     .background(RoundedRectangle(cornerRadius: 10).fill(Color("darkGray")))
                     .padding()
                     
-                    Text("RECENT")
-                        .bold()
-                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                        .font(.footnote)
-                        .foregroundColor(.gray)
-                        .padding(.bottom, -16)
-                        .padding(.leading)
+                    if !sessions.isEmpty {
+                        Text("RECENT")
+                            .bold()
+                            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                            .font(.footnote)
+                            .foregroundColor(.gray)
+                            .padding(.bottom, -16)
+                            .padding(.leading)
+                    }
                     ForEach(sessions) { session in
                         NavigationLink(destination: DetailSessionView(session: session)) {
                             SessionView(session: session)
@@ -60,9 +63,6 @@ struct FeedView: View {
                                 .padding()
                                 .foregroundColor(colorScheme == .dark ? .white : .black)
                         }
-                    }
-                    if sessions.isEmpty {
-                        ProgressView()
                     }
                 }
             }
@@ -136,6 +136,7 @@ struct FeedView: View {
         }
         .sheet(isPresented: $showProfile) {
             ProfileView()
+                .environmentObject(userInfoViewModel)
         }
     }
 }

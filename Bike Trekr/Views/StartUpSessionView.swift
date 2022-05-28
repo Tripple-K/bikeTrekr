@@ -6,7 +6,6 @@ struct StartUpSessionView: View {
     
     @Environment(\.presentationMode) var presentationMode
     
-    @Binding var show: Bool
     @Binding var timeBeforeSession: Int
     @State var times = 0
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -27,14 +26,15 @@ struct StartUpSessionView: View {
                             generatorHeavy.impactOccurred()
                         }
                         else {
-                            self.show.toggle()
+                            generatorHeavy.impactOccurred()
+                            presentationMode.wrappedValue.dismiss()
                         }
                     }
                     
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .onTapGesture {
-                self.show.toggle()
+                presentationMode.wrappedValue.dismiss()
             }
            
         }

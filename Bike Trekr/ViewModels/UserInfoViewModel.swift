@@ -9,6 +9,23 @@ class UserInfoViewModel: ObservableObject, Identifiable {
     private var cancellables: Set<AnyCancellable> = []
     var id = ""
     
+    var isValid: Bool {
+        if userInfo.displayName.count > 50 || userInfo.displayName.count < 4 {
+            return false
+        }
+        let age = Calendar.current.dateComponents([.year], from: userInfo.birthday, to: .now)
+        if age.year ?? 0 < 16 {
+            return false
+        }
+        if userInfo.height > 300 || userInfo.height < 90 {
+            return false
+        }
+        if userInfo.weight > 300 || userInfo.weight < 25 {
+            return false
+        }
+        return true
+    }
+    
     init(userInfo: UserInfo) {
         self.userInfo = userInfo
         $userInfo

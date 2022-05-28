@@ -251,11 +251,15 @@ struct ProfileView: View {
                     }
                     ToolbarItem(placement: .navigationBarLeading) {
                         Button (action: {
+                            if !focused && !showHeightPicker && !showWeightPicker && !editUserName {
+                                presentationMode.wrappedValue.dismiss()
+                            }
+                            
                             focused = false
                             showHeightPicker = false
                             showWeightPicker = false
                             editUserName = false
-                            presentationMode.wrappedValue.dismiss()
+                            
                         }, label: {
                             Text("Cancel")
                                 .foregroundColor(canceable && userInfoViewModel.isValid ? .blue : .gray)

@@ -12,7 +12,10 @@ struct SessionSettingsView: View {
     @AppStorage("goal") var goal: GoalType = .none
     @AppStorage("duration") var seconds: Int = 1800 {
         didSet {
-            duration = "\(String(format: "%02d", seconds / 3600)):\(String(format: "%02d", (seconds % 3600) / 60)):\(String(format: "%02d", (seconds % 3600) % 60))"
+            guard seconds >= 0 else {
+                seconds = oldValue
+                return
+            }
         }
     }
     
@@ -33,7 +36,9 @@ struct SessionSettingsView: View {
         return "\(String(format: "%02d", Int(distance))),\(String(format: "%02d", Int(distance.truncatingRemainder(dividingBy: 1) * 100)))"
     }
     
-    @State var duration = "00:30:00"
+    var duration: String {
+        return "\(String(format: "%02d", seconds / 3600)):\(String(format: "%02d", (seconds % 3600) / 60)):\(String(format: "%02d", (seconds % 3600) % 60))"
+    }
     
     
     var body: some View {

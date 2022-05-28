@@ -27,6 +27,8 @@ struct MainView: View {
     
     @AppStorage("autoPause") var autoPause = true
     
+    @AppStorage("goal") var goal: GoalType = .none
+    
     @AppStorage("timerBeforeSession") var timerBeforeSession: Int = 3
     
     var body: some View {
@@ -73,7 +75,22 @@ struct MainView: View {
                         .sheet(isPresented: $showSessionSetUp) {
                             SessionSettingsView(typeSession: $sessionViewModel.session.typeSession, timer: $timerBeforeSession)
                         }
+                    } else if sessionViewModel.status != .stop && goal == .speed {
+                        ZStack {
+                            Circle()
+                                .frame(width: 50.0, height: 50.0)
+                                .foregroundColor(.red)
+                            
+                            Image(systemName: "flag.fill")
+                                .foregroundColor(.white)
+                        }.onTapGesture {
+                            
+                        }
+//                        .sheet(isPresented: $showSessionSetUp) {
+//                            SessionSettingsView(typeSession: $sessionViewModel.session.typeSession, timer: $timerBeforeSession)
+//                        }
                     }
+                    
                     ZStack {
                         RoundedRectangle(cornerSize: CGSize(width: 10, height: 10))
                             .fill(Color.red)
@@ -157,6 +174,7 @@ struct MainView: View {
                                 }
                         )
                     }
+                    
                 }.padding()
             }
         }

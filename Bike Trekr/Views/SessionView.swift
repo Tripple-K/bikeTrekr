@@ -9,7 +9,7 @@ struct SessionView: View {
     let dayFormatter = DateFormatter(with: "dd.MM.y")
     let timeFormatter = DateFormatter(with: "hh:mm aa")
     
-    @State var overviewMapView: DetailMapController?
+    @State var overviewMapView: DetailMapView?
     
     var body: some View {
         VStack (alignment: .leading, spacing: 0) {
@@ -45,7 +45,7 @@ struct SessionView: View {
                 }
             }
             .onAppear {
-                overviewMapView = DetailMapController(locations: session.locations)
+                overviewMapView = DetailMapView(locations: session.locations)
                 overviewMapView?.userInteraction = false
                 overviewMapView?.iconMap = true
             }

@@ -12,6 +12,8 @@ struct FeedView: View {
     @State var period: Period = .week
     @State var showProfile = false
     
+    @State var loading = true
+    
     @State var sessions: [Session] = []
     
     var body: some View {
@@ -47,15 +49,7 @@ struct FeedView: View {
                     .background(RoundedRectangle(cornerRadius: 10).fill(Color("darkGray")))
                     .padding()
                     
-                    if !sessions.isEmpty {
-                        Text("RECENT")
-                            .bold()
-                            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                            .font(.footnote)
-                            .foregroundColor(.gray)
-                            .padding(.bottom, -16)
-                            .padding(.leading)
-                    }
+                    
                     ForEach(sessions) { session in
                         NavigationLink(destination: DetailSessionView(session: session)) {
                             SessionView(session: session)
@@ -64,6 +58,8 @@ struct FeedView: View {
                                 .foregroundColor(colorScheme == .dark ? .white : .black)
                         }
                     }
+                   
+                    
                 }
             }
             .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)

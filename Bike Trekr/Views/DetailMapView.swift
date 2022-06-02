@@ -1,7 +1,7 @@
 import SwiftUI
 import MapKit
 
-struct DetailMapController: UIViewRepresentable {
+struct DetailMapView: UIViewRepresentable {
     
     let locations: [Location]
     
@@ -112,9 +112,9 @@ struct DetailMapController: UIViewRepresentable {
 }
 
 class Coordinator: NSObject, MKMapViewDelegate {
-    var parent: DetailMapController
+    var parent: DetailMapView
     
-    init(_ parent: DetailMapController) {
+    init(_ parent: DetailMapView) {
         self.parent = parent
     }
     

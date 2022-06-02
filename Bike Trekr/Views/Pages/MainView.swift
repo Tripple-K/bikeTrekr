@@ -25,6 +25,8 @@ struct MainView: View {
 
     @State var mapView = MapView()
     
+    @State var interval = 1
+    
     @AppStorage("autoPause") var autoPause = true
     
     @AppStorage("goal") var goal: GoalType = .none
@@ -34,7 +36,11 @@ struct MainView: View {
     var body: some View {
         VStack (spacing: 0) {
             SessionCurrentInfoView().environmentObject(sessionViewModel)
-            
+            if goal == .speed && sessionViewModel.status != .stop {
+                Text("Interval \(interval)")
+                    .font(.title)
+                    .foregroundColor(.gray)
+            }
             VStack (spacing: 0) {
                 
                 GeometryReader { proxy in

@@ -11,7 +11,7 @@ struct DetailSessionView: View {
     
     @State var fullscreenMap = false
     
-    @State var overviewMapView: DetailMapController?
+    @State var overviewMapView: DetailMapView?
     
     
     var body: some View {
@@ -100,14 +100,14 @@ struct DetailSessionView: View {
                 
             }
             .onAppear {
-                overviewMapView = DetailMapController(locations: session.locations)
+                overviewMapView = DetailMapView(locations: session.locations)
                 overviewMapView?.userInteraction = false
             }
         }
         .navigationBarTitleDisplayMode(.inline)
         .background(Color("background"))
         .fullScreenCover(isPresented: $fullscreenMap) {
-            DetailMapController(locations: session.locations)
+            DetailMapView(locations: session.locations)
                 .ignoresSafeArea()
                 .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
                 .overlay (

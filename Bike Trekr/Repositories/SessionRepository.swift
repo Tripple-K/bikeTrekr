@@ -12,6 +12,7 @@ class SessionRepository: ObservableObject {
     private let path: String = "sessions"
     private let store = Firestore.firestore()
     
+    
     @Published var sessions: [Session] = []
     
     var userId = ""
@@ -51,7 +52,7 @@ class SessionRepository: ObservableObject {
                 self.sessions.sort(by: {
                     $0.date > $1.date
                 })
-               
+                
             }
     }
     
@@ -90,3 +91,4 @@ class SessionRepository: ObservableObject {
         }
     }
 }
+

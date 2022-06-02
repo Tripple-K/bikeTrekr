@@ -8,6 +8,7 @@ struct Session: Identifiable, Codable {
     var distance: Double = 0
     var duration: Int = 0
     var date: Date = Date()
+    
     var avSpeed: Double {
         let speeds = locations.compactMap { location -> CLLocationSpeed in
             return location.speed > 0 ? location.speed : 0
@@ -19,9 +20,11 @@ struct Session: Identifiable, Codable {
     var maxSpeed: Double {
         return locations.max(by: {$0.speed < $1.speed})?.speed ?? 0
     }
+    
     var typeSession: SessionType = .running
     var userId: String? = ""
-    var locations = [Location]()
+    
+    var locations = [Location]() 
 }
 
 enum SessionType: String, Equatable, CaseIterable, Codable {
@@ -38,3 +41,4 @@ extension SessionType {
     }
 }
 
+ 

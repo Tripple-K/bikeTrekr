@@ -22,6 +22,7 @@ struct MapView: UIViewRepresentable {
     
     func updateUIView(_ uiView: MKMapView, context: Context) {
         if manager.status == .running {
+            uiView.removeOverlays(uiView.overlays)
             let polyline = MKPolyline(coordinates: manager.session.locations.compactMap { location -> CLLocationCoordinate2D in
                 return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
             }, count: manager.session.locations.count)

@@ -3,8 +3,7 @@ import MapKit
 
 struct DetailMapView: UIViewRepresentable {
     
-    let locations: [Location]
-    
+    let session: Session
     let mapView = MKMapView()
     
     var userInteraction: Bool = true {
@@ -22,29 +21,31 @@ struct DetailMapView: UIViewRepresentable {
         let range = MKMapView.CameraZoomRange(minCenterCoordinateDistance: 2500, maxCenterCoordinateDistance: 10000)
         mapView.cameraZoomRange = range
         
-        let coordinates = locations.sorted(by: {
-            $0.timestamp < $1.timestamp
-        }).compactMap { location -> CLLocationCoordinate2D in
-            return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+        var locations = [CLLocationCoordinate2D]()
+        session.intervals.forEach { interval in
+            locations.append(contentsOf: interval.locations.compactMap { location -> CLLocationCoordinate2D in
+                return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+            })
         }
         
         mapView.region = getRegion()
-        if let first = coordinates.first {
+        setUpAnnotaions(with: mapView)
+        if let first = locations.first {
             let start = Point(bounds: MKMapRect(origin: .init(first), size: MKMapSize(width: 20, height: 20)), color: .blue)
             mapView.addOverlay(start, level: .aboveLabels)
         }
         
-        if let last = coordinates.last {
-            let finish = Point(bounds: MKMapRect(origin: .init(last), size: MKMapSize(width: 20, height: 20)), color: .red)
+        if let last = locations.last {
+            let finish = Point(bounds: MKMapRect(origin: .init(last), size: MKMapSize(width: 20, height: 20)), color: .blue)
             mapView.addOverlay(finish, level: .aboveLabels)
         }
         
-        let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+        let polyline = MKPolyline(coordinates: locations, count: locations.count)
         
         mapView.addOverlay(polyline, level: .aboveRoads)
         
         
-        setUpAnnotaions(with: mapView)
+        
         
         return mapView
     }
@@ -56,27 +57,27 @@ struct DetailMapView: UIViewRepresentable {
     }
     
     func setUpAnnotaions(with view: MKMapView) {
-        let coordinates = locations.sorted(by: {
-            $0.timestamp < $1.timestamp
-        }).compactMap { location -> CLLocation in
-            return CLLocation(latitude: location.latitude, longitude: location.longitude)
-        }
         
-        var distance: Double = 0
         
-        guard var prev = coordinates.first else { return }
-        
-        for coordinate in coordinates {
-            distance += prev.distance(from: coordinate) / 1000
-            prev = coordinate
+        session.intervals.forEach { interval in
+            guard !iconMap else { return }
+            guard let location = interval.locations.last else { return }
             
-            if (distance.truncatingRemainder(dividingBy: 1) <= 0.01 || distance.truncatingRemainder(dividingBy: 1) >= 0.99) && distance > 0.01 {
-                let point = Point(bounds: MKMapRect(origin: .init(coordinate.coordinate), size: MKMapSize(width: 15, height: 15)), color: .yellow)
-                view.addOverlay(point, level: .aboveLabels)
-                guard !iconMap else { return }
-                let annotation = DistanceAnnotation(coordinate: coordinate.coordinate, title: "\(Int(round(distance))) km")
+            let point = Point(bounds: MKMapRect(origin: .init(CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)), size: MKMapSize(width: 15, height: 15)), color: .yellow)
+            
+            view.addOverlay(point)
+            
+            
+            if session.goal != .speed && interval.distance >= 0.99 {
+                let annotation = DistanceAnnotation(coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude), title: "\(interval.index) km")
+                view.addAnnotation(annotation)
+            } else if session.goal == .speed {
+                let annotation = DistanceAnnotation(coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude), title: "\(interval.index)")
                 view.addAnnotation(annotation)
             }
+            
+            
+           
         }
         
     }
@@ -87,7 +88,14 @@ struct DetailMapView: UIViewRepresentable {
         var minLongitude: CLLocationDegrees = 180.0
         var maxLongitude: CLLocationDegrees = -180.0
         
-        for coordinate in self.locations {
+        var locations = [CLLocationCoordinate2D]()
+        session.intervals.forEach { interval in
+            locations.append(contentsOf: interval.locations.compactMap { location -> CLLocationCoordinate2D in
+                return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+            })
+        }
+        
+        for coordinate in locations {
             let lat = Double(coordinate.latitude)
             let long = Double(coordinate.longitude)
             if lat < minLatitude {

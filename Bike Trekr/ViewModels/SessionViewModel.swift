@@ -6,6 +6,7 @@ import FirebaseAuth
 import HealthKit
 import FirebaseFirestore
 import FirebaseDatabaseSwift
+import SwiftUI
 
 class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationManagerDelegate {
     @Published var session: Session
@@ -13,6 +14,9 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
     @Published var speed = CLLocationSpeed()
     @Published var status: StatusSession = .stop
     @Published var duration = "00:00:00"
+    @Published var distance = 0.0
+    
+    @AppStorage("goal") var goal: GoalType = .none
     
     private let store = Firestore.firestore()
     private var cancellables: Set<AnyCancellable> = []
@@ -52,14 +56,22 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
             let span = MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
             region = MKCoordinateRegion(center: center, span: span)
             
-            if let lastLocation = self.session.locations.last {
-                if status == .running {
-                    self.session.distance += location.distance(lastLocation) / 1000
-                }
-                
-            }
-            self.session.locations.append(location)
             speed = manager.location?.speed ?? 0
+            
+            guard status == .running else { return }
+            
+            if let lastLocation = self.session.intervals.last?.locations.last {
+                self.distance += location.distance(lastLocation) / 1000
+            }
+            
+            if self.session.intervals.count < Int(distance + 1)  {
+                let interval = Interval(index: Int(distance + 1))
+                self.session.intervals.append(interval)
+            }
+            
+            self.session.intervals[Int(distance)].locations.append(location)
+            self.session.intervals[Int(distance)].distance = self.distance.truncatingRemainder(dividingBy: 1)
+
         }
         
     }
@@ -83,6 +95,7 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
     func start() {
         let type = session.typeSession
         session = Session()
+        session.goal = goal
         session.typeSession = type
         speed = 0
         status = .running
@@ -107,6 +120,7 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
         let type = session.typeSession
         session = Session()
         session.typeSession = type
+        session.goal = goal
         timer.invalidate()
         
     }
@@ -187,12 +201,14 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
     }
     
     func loadPolyline() {
-        let coordinates = session.locations.sorted(by: {
-            $0.timestamp < $1.timestamp
-        }).compactMap { location -> CLLocationCoordinate2D in
-            return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+        var locations = [CLLocationCoordinate2D]()
+        session.intervals.forEach { interval in
+            locations.append(contentsOf: interval.locations.compactMap { location -> CLLocationCoordinate2D in
+                return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+            })
         }
-        let polyline = MKPolyline(coordinates: coordinates, count: coordinates.count)
+        
+        let polyline = MKPolyline(coordinates: locations, count: locations.count)
         MapView.mapView.addOverlay(polyline, level: .aboveRoads)
     }
 }

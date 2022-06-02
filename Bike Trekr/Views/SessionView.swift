@@ -45,7 +45,7 @@ struct SessionView: View {
                 }
             }
             .onAppear {
-                overviewMapView = DetailMapView(locations: session.locations)
+                overviewMapView = DetailMapView(session: session)
                 overviewMapView?.userInteraction = false
                 overviewMapView?.iconMap = true
             }

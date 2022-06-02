@@ -266,5 +266,5 @@ struct MainView: View {
 
 
 enum GoalType: String, CaseIterable, Codable {
-    case duration, distance, speed, none = "Set a goal"
+    case duration, distance, speed, none
 }

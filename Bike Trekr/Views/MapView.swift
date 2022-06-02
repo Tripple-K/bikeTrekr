@@ -6,13 +6,13 @@ import UIKit
 struct MapView: UIViewRepresentable {
     
     typealias UIViewType = MKMapView
-    @EnvironmentObject var manager: SessionViewModel
+    @EnvironmentObject var sessionViewModel: SessionViewModel
     static let mapView = MKMapView()
 
     func makeUIView(context: Context) -> MKMapView {
         
         MapView.mapView.delegate = context.coordinator
-        MapView.mapView.setRegion(manager.region, animated: true)
+        MapView.mapView.setRegion(sessionViewModel.region, animated: true)
         
         MapView.mapView.showsUserLocation = true
         MapView.mapView.userTrackingMode = .followWithHeading
@@ -21,14 +21,22 @@ struct MapView: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: MKMapView, context: Context) {
-        if manager.status == .running {
+        if sessionViewModel.status == .running {
+            
             uiView.removeOverlays(uiView.overlays)
-            let polyline = MKPolyline(coordinates: manager.session.locations.compactMap { location -> CLLocationCoordinate2D in
-                return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
-            }, count: manager.session.locations.count)
+            
+            var locations = [CLLocationCoordinate2D]()
+            sessionViewModel.session.intervals.forEach { interval in
+                locations.append(contentsOf: interval.locations.compactMap { location -> CLLocationCoordinate2D in
+                    return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+                })
+            }
+            let polyline = MKPolyline(coordinates: locations, count: locations.count)
+            
             uiView.addOverlay(polyline)
+            
         }
-        else if manager.status == .stop {
+        else if sessionViewModel.status == .stop {
             uiView.removeOverlays(uiView.overlays)
         }
     }

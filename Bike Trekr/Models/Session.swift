@@ -5,30 +5,40 @@ import HealthKit
 
 struct Session: Identifiable, Codable {
     @DocumentID var id: String?
-    var distance: Double = 0
+    var distance: Double {
+        var distance = 0.0
+        intervals.forEach {
+            distance += $0.distance
+        }
+        return distance
+    }
     var duration: Int = 0
     var date: Date = Date()
     
     var avSpeed: Double {
-        let speeds = locations.compactMap { location -> CLLocationSpeed in
-            return location.speed > 0 ? location.speed : 0
-        }
-        guard !locations.isEmpty else { return 0 }
-        return speeds.reduce(0, +) / Double(locations.count)
+        return 0
     }
-    
+
     var maxSpeed: Double {
-        return locations.max(by: {$0.speed < $1.speed})?.speed ?? 0
+        return 0
     }
-    
+
+    var goal: GoalType = .none
     var typeSession: SessionType = .running
     var userId: String? = ""
-    
-    var locations = [Location]() 
+    var intervals = [Interval]()
 }
 
 enum SessionType: String, Equatable, CaseIterable, Codable {
     case running, cycling, walking
+}
+
+struct Interval: Codable {
+    var index: Int = 1
+    var distance: Double = 0
+    var duration: Int = 0
+    
+    var locations = [Location]()
 }
 
 extension SessionType {

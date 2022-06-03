@@ -38,6 +38,19 @@ struct Session: Identifiable, Codable {
     var goal: GoalType = .none
     var typeSession: SessionType = .running
     var userId: String? = ""
+    
+    var year: String {
+        return date.formatted(.dateTime.year())
+    }
+    
+    var month: String {
+        return date.formatted(.dateTime.year().month())
+    }
+    
+    var week: String {
+        return date.formatted(.dateTime.year().month().week())
+    }
+    
     var intervals = [Interval]()
 }
 
@@ -77,3 +90,6 @@ extension SessionType {
 }
 
  
+enum Period: String, Equatable, CaseIterable {
+    case week, month, year, all
+}

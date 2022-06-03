@@ -56,6 +56,24 @@ class SessionRepository: ObservableObject {
             }
     }
     
+    func getPeriods(_ period: Period) -> [String] {
+        guard period != .all else { return [] }
+        var set = Set<String>()
+        
+        sessions.forEach {
+            switch period {
+            case .week:
+                set.insert($0.week)
+            case .month:
+                set.insert($0.month)
+            case .year:
+                set.insert($0.year)
+            default: break
+            }
+        }
+        return Array(set.reversed())
+    }
+
     
     func add(_ session: Session) {
         do {

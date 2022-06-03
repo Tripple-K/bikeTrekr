@@ -9,6 +9,13 @@ struct FeedView: View {
     @EnvironmentObject var userInfoViewModel: UserInfoViewModel
     @Environment(\.colorScheme) var colorScheme
     
+    @State var sections = [String]() {
+        didSet {
+            currSection = sections.count - 1
+        }
+    }
+    @State var currSection = 0
+    
     @State var period: Period = .week
     @State var showProfile = false
     
@@ -30,6 +37,8 @@ struct FeedView: View {
                             }
                         }
                         .pickerStyle(.segmented)
+                        
+                        SectionPicker(selection: $currSection, sections: $sections)
                         
                         VStack (alignment: .leading) {
                             
@@ -63,42 +72,24 @@ struct FeedView: View {
                 }
             }
             .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-            .onReceive(SessionRepository.shared.$sessions) { sessions in
-                self.sessions = sessions.filter { session in
-                    var filterDate: Date? = Date()
-                    switch period {
-                    case .week:
-                        filterDate = Calendar.current.date(byAdding: .day, value: -7, to: filterDate!)
-                    case .month:
-                        filterDate = Calendar.current.date(byAdding: .month, value: -1, to: filterDate!)
-                    case .year:
-                        filterDate = Calendar.current.date(byAdding: .year, value: -1, to: filterDate!)
-                    case .all:
-                        return true
-                    }
-                    guard let filterDate = filterDate else {
-                        return false
-                    }
-                    return session.date > filterDate
-                }
+            .onReceive(SessionRepository.shared.$sessions) { _ in
+                resolve()
             }
-            .onChange(of: period) { newValue in
+            .onChange(of: period) { _ in
+                resolve()
+            }
+            .onChange(of: currSection) { _ in
                 sessions = SessionRepository.shared.sessions.filter { session in
-                    var filterDate: Date? = Date()
                     switch period {
                     case .week:
-                        filterDate = Calendar.current.date(byAdding: .day, value: -7, to: filterDate!)
+                        return session.week == sections[currSection]
                     case .month:
-                        filterDate = Calendar.current.date(byAdding: .month, value: -1, to: filterDate!)
+                        return session.month == sections[currSection]
                     case .year:
-                        filterDate = Calendar.current.date(byAdding: .year, value: -1, to: filterDate!)
+                        return session.year == sections[currSection]
                     case .all:
                         return true
                     }
-                    guard let filterDate = filterDate else {
-                        return false
-                    }
-                    return session.date > filterDate
                 }
             }
             .navigationTitle("Feed")
@@ -135,9 +126,23 @@ struct FeedView: View {
                 .environmentObject(userInfoViewModel)
         }
     }
+    
+    func resolve() {
+        sections = SessionRepository.shared.getPeriods(period)
+        sessions = SessionRepository.shared.sessions.filter { session in
+            switch period {
+            case .week:
+                return session.week == sections[currSection]
+            case .month:
+                return session.month == sections[currSection]
+            case .year:
+                return session.year == sections[currSection]
+            case .all:
+                return true
+            }
+        }
+    }
 }
 
 
-enum Period: String, Equatable, CaseIterable {
-    case week, month, year, all
-}
+

@@ -68,7 +68,7 @@ struct DetailMapView: UIViewRepresentable {
             view.addOverlay(point)
             
             
-            if session.goal != .speed && interval.distance >= 0.99 {
+            if session.goal != .speed && interval.distance >= 0.9 {
                 let annotation = DistanceAnnotation(coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude), title: "\(interval.index) km")
                 view.addAnnotation(annotation)
             } else if session.goal == .speed {

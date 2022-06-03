@@ -64,16 +64,33 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
                 self.distance += location.distance(lastLocation) / 1000
             }
             
-            if self.session.intervals.count < Int(distance + 1)  {
+            if self.session.intervals.count < Int(distance + 1) && self.session.goal != .speed {
                 let interval = Interval(index: Int(distance + 1))
                 self.session.intervals.append(interval)
             }
             
-            self.session.intervals[Int(distance)].locations.append(location)
-            self.session.intervals[Int(distance)].distance = self.distance.truncatingRemainder(dividingBy: 1)
+            guard let last = self.session.intervals.last else { return }
+            self.session.intervals[last.index - 1].locations.append(location)
+            if self.session.goal != .speed {
+                self.session.intervals[last.index - 1].distance = self.distance.truncatingRemainder(dividingBy: 1)
+            } else {
+                self.session.intervals[last.index - 1].distance = self.distance
+            }
+            
 
         }
         
+    }
+    
+    func addInterval() {
+        self.distance = 0
+        if let last = self.session.intervals.last {
+            let interval = Interval(index: last.index + 1)
+            self.session.intervals.append(interval)
+        } else {
+            let interval = Interval()
+            self.session.intervals.append(interval)
+        }
     }
     
     func pause() {
@@ -81,7 +98,9 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
         switch status {
         case .pause:
             timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
-                self.session.duration += 1
+                guard let last = self.session.intervals.last else { return }
+                self.session.intervals[last.index - 1].duration += 1
+
             }
             status = .running
         case .stop:
@@ -96,6 +115,9 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
         let type = session.typeSession
         session = Session()
         session.goal = goal
+        if session.goal == .speed {
+            addInterval()
+        }
         session.typeSession = type
         speed = 0
         status = .running
@@ -103,7 +125,8 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
         manager.startMonitoringSignificantLocationChanges()
         
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
-            self.session.duration += 1
+            guard let last = self.session.intervals.last else { return }
+            self.session.intervals[last.index - 1].duration += 1
         }
         getTemp()
     }

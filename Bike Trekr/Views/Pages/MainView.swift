@@ -22,10 +22,11 @@ struct MainView: View {
 
     @State var showGoalSheet = false
     @State var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    
+    
+    @State var section = 0
 
     @State var mapView = MapView()
-    
-    @State var interval = 1
     
     @AppStorage("autoPause") var autoPause = true
     
@@ -36,36 +37,83 @@ struct MainView: View {
     var body: some View {
         VStack (spacing: 0) {
             SessionCurrentInfoView().environmentObject(sessionViewModel)
-            if goal == .speed && sessionViewModel.status != .stop {
-                Text("Interval \(interval)")
-                    .font(.title)
-                    .foregroundColor(.gray)
-            }
+            
             VStack (spacing: 0) {
-                
-                GeometryReader { proxy in
-                    
-                    ZStack {
+                if sessionViewModel.status != .stop {
+                    TabView(selection: $section) {
+                        VStack {
+                            if goal == .speed && sessionViewModel.status != .stop {
+                                Text("Interval \(sessionViewModel.session.intervals.count)")
+                                    .font(.title)
+                                    .foregroundColor(.gray)
+                                    .frame(alignment: .center)
+                            }
+                           
+                            
+                            GeometryReader { proxy in
+                                
+                                
+                                ZStack {
+                                   
+                                    mapView
+                                        .frame(width: proxy.size.width, height: proxy.size.width, alignment: .bottom)
+                                        .opacity(opacity)
+                                        .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .top, endPoint: .bottom))
+                                        .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .leading, endPoint: .trailing))
+                                        .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .bottomLeading, endPoint: .topTrailing))
+                                        .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .topLeading, endPoint: .bottomTrailing))
+                                }.frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
+                            }
+                            .onAppear {
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                    withAnimation (.linear(duration: 1.0)) {
+                                        self.opacity = 1
+                                    }
+                                }
+                            }
+                        }
+                        .tag(0)
+                        IntervalsView()
+                            .environmentObject(sessionViewModel)
+                            .tag(1)
+                    }
+                    .tabViewStyle(.page)
+                    .indexViewStyle(.page(backgroundDisplayMode: .always))
+                } else {
+                    VStack {
+                        if goal == .speed && sessionViewModel.status != .stop {
+                            Text("Interval \(sessionViewModel.session.intervals.count)")
+                                .font(.title)
+                                .foregroundColor(.gray)
+                                .frame(alignment: .center)
+                        }
                        
-                        mapView
-                            .frame(width: proxy.size.width, height: proxy.size.width, alignment: .bottom)
-                            .opacity(opacity)
-                            .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .top, endPoint: .bottom))
-                            .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .leading, endPoint: .trailing))
-                            .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .bottomLeading, endPoint: .topTrailing))
-                            .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .topLeading, endPoint: .bottomTrailing))
-                    }.frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
-                }
-                .onAppear {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                        withAnimation (.linear(duration: 1.0)) {
-                            self.opacity = 1
+                        
+                        GeometryReader { proxy in
+                            
+                            
+                            ZStack {
+                               
+                                mapView
+                                    .frame(width: proxy.size.width, height: proxy.size.width, alignment: .bottom)
+                                    .opacity(opacity)
+                                    .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .top, endPoint: .bottom))
+                                    .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .leading, endPoint: .trailing))
+                                    .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .bottomLeading, endPoint: .topTrailing))
+                                    .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .topLeading, endPoint: .bottomTrailing))
+                            }.frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
+                        }
+                        .onAppear {
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                                withAnimation (.linear(duration: 1.0)) {
+                                    self.opacity = 1
+                                }
+                            }
                         }
                     }
                 }
-                
-                
-                
+               
+            
                 HStack {
                     if sessionViewModel.status == .stop {
                         ZStack {
@@ -82,19 +130,18 @@ struct MainView: View {
                             SessionSettingsView(typeSession: $sessionViewModel.session.typeSession, timer: $timerBeforeSession)
                         }
                     } else if sessionViewModel.status != .stop && goal == .speed {
-                        ZStack {
-                            Circle()
-                                .frame(width: 50.0, height: 50.0)
-                                .foregroundColor(.red)
-                            
-                            Image(systemName: "flag.fill")
-                                .foregroundColor(.white)
-                        }.onTapGesture {
-                            
-                        }
-//                        .sheet(isPresented: $showSessionSetUp) {
-//                            SessionSettingsView(typeSession: $sessionViewModel.session.typeSession, timer: $timerBeforeSession)
-//                        }
+                        Button(action: {
+                            sessionViewModel.addInterval()
+                        }, label: {
+                            ZStack {
+                                Circle()
+                                    .frame(width: 50.0, height: 50.0)
+                                    .foregroundColor(.red)
+                                
+                                Image(systemName: "flag.fill")
+                                    .foregroundColor(.white)
+                            }
+                        })
                     }
                     
                     ZStack {

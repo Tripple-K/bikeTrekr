@@ -96,6 +96,42 @@ struct DetailSessionView: View {
                         }
                    
                     .padding()
+                    
+                    Text("INTERVALS")
+                        .bold()
+                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                        .font(.footnote)
+                        .foregroundColor(.gray)
+                        .padding(.bottom, -16)
+                        .padding(.leading)
+                    
+                   
+                    VStack () {
+                        HStack {
+                            Text("").frame(width: 45)
+                            Text("Distance").frame(width: 80, alignment: .leading)
+                            Text("Speed").frame(alignment: .leading)
+                            Spacer()
+                            Text("Time")
+                        }
+                        .padding(10)
+                        ForEach(0..<session.intervals.count, id: \.self) { index in
+                            let interval = session.intervals[index]
+                            HStack {
+                                Text("\(interval.index)").frame(width: 45)
+                                Text("\(String(format: "%.1f", interval.distance)) km").frame(width: 80, alignment: .leading)
+                                
+                                Text("\(String(format: "%.2f", interval.avSpeed)) km/h").frame(alignment: .leading)
+                                Spacer()
+                                Text("\(String(format: "%02d", interval.duration / 3600)):\(String(format: "%02d", (interval.duration % 3600) / 60)):\(String(format: "%02d", (interval.duration % 3600) % 60))")
+                            }
+                            .padding(10)
+                        }
+
+                    }
+                    .background(RoundedRectangle(cornerRadius: 10).fill(Color("darkGray")))
+                    .padding()
+                   
                 }
                 
             }

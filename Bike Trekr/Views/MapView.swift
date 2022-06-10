@@ -23,7 +23,7 @@ struct MapView: UIViewRepresentable {
     func updateUIView(_ uiView: MKMapView, context: Context) {
         if sessionViewModel.status == .running {
             
-            uiView.removeOverlays(uiView.overlays)
+            MapView.mapView.removeOverlays(uiView.overlays)
             
             var locations = [CLLocationCoordinate2D]()
             sessionViewModel.session.intervals.forEach { interval in
@@ -33,11 +33,8 @@ struct MapView: UIViewRepresentable {
             }
             let polyline = MKPolyline(coordinates: locations, count: locations.count)
             
-            uiView.addOverlay(polyline)
+            MapView.mapView.addOverlay(polyline)
             
-        }
-        else if sessionViewModel.status == .stop {
-            uiView.removeOverlays(uiView.overlays)
         }
     }
     
@@ -57,7 +54,7 @@ struct MapView: UIViewRepresentable {
             if let routePolyline = overlay as? MKPolyline {
                 let renderer = MKPolylineRenderer(polyline: routePolyline)
                 renderer.strokeColor = UIColor.red
-                renderer.lineWidth = 7
+                renderer.lineWidth = 5
                 return renderer
             }
             

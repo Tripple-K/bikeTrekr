@@ -10,17 +10,16 @@ struct ProfileView: View {
     @EnvironmentObject var auth: AuthenticationService
     @AppStorage("autoPause") var autoPause = true
     
-    @State var showHeightPicker = false
-    @State var showWeightPicker = false
+    @State var showPicker: Bool = false
     @State var showingAlertLogOut = false 
     @State var editUserName = false
     
-    @State var saveable = false
-    @State var canceable = true
-    
-    @State var error = ""
+    @State var editType: UserInfoType = .height
     
     @FocusState var focused: Bool
+    
+    @State var saveable = true
+    @State var error: String = ""
     
     var authorizationStatus: String {
         switch HealthAssistant.shared.getAuthorizationStatus() {
@@ -32,247 +31,255 @@ struct ProfileView: View {
     }
 
     var body: some View {
+        
         VStack {
-            NavigationView {
-                VStack {
-                    if error.isEmpty {
-                        EmptyView()
-                    }
-                    else {
-                        Text(error)
-                            .padding(.top)
-                            .foregroundColor(.red)
-                    }
-                    List {
-                        Section(header: Text("Info").foregroundColor(.red).bold()) {
-                            HStack (spacing: 0) {
-                                Text("Name")
-                                Spacer()
-                                if !editUserName {
-                                    Text("\(userInfoViewModel.userInfo.displayName)").onTapGesture {
-                                        editUserName.toggle()
-                                    }
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.red)
-                                        .frame(width: 20, height: 20)
-                                        .onTapGesture {
-                                            editUserName.toggle()
-                                        }
-                                } else {
-                                    TextField("Name", text: $userInfoViewModel.userInfo.displayName)
-                                        .focused($focused)
-                                        .multilineTextAlignment(.trailing)
-                                        .frame(maxWidth: .infinity)
-                                        .onSubmit {
-                                            editUserName.toggle()
-                                        }
-                                        .onChange(of: userInfoViewModel.userInfo.displayName) { newValue in
-                                            if newValue.count > 50 {
-                                                saveable = false
-                                                canceable = false
-                                                withAnimation {
-                                                    error = "display name is too long"
-                                                }
-                                            } else if newValue.count < 4 {
-                                                saveable = false
-                                                canceable = false
-                                                withAnimation {
-                                                    error = "display name is too short"
-                                                }
-                                            } else {
-                                                saveable = true
-                                                canceable = true
-                                                withAnimation {
-                                                    error = ""
-                                                }
-                                                
-                                            }
-                                            
-                                        }
-                                }
-                                
+            if error.isEmpty {
+                EmptyView()
+            }
+            else {
+                Text(error)
+                    .padding(.top)
+                    .foregroundColor(.red)
+            }
+            List {
+                Section(header: Text("Info").foregroundColor(.red).bold()) {
+                    HStack (spacing: 0) {
+                        Text("Name")
+                        Spacer()
+                        if !editUserName {
+                            Text("\(userInfoViewModel.userInfo.displayName)").onTapGesture {
+                                editUserName.toggle()
                             }
-                            DatePicker("Birthday", selection: $userInfoViewModel.userInfo.birthday, displayedComponents: [.date])
-                                .onChange(of: userInfoViewModel.userInfo.birthday) { newValue in
-                                    let age = Calendar.current.dateComponents([.year], from: newValue, to: .now)
-                                    if age.year ?? 0 >= 16 {
-                                        saveable = true
-                                        canceable = true
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.red)
+                                .frame(width: 20, height: 20)
+                                .onTapGesture {
+                                    editUserName.toggle()
+                                }
+                        } else {
+                            TextField("Name", text: $userInfoViewModel.userInfo.displayName)
+                                .focused($focused)
+                                .multilineTextAlignment(.trailing)
+                                .frame(maxWidth: .infinity)
+                                .onSubmit {
+                                    userInfoViewModel.update()
+                                    editUserName.toggle()
+                                }
+                                .onChange(of: userInfoViewModel.userInfo.displayName) { newValue in
+                                    if newValue.count > 50 {
+                                        withAnimation {
+                                            error = "display name is too long"
+                                        }
+                                    } else if newValue.count < 4 {
+                                        withAnimation {
+                                            error = "display name is too short"
+                                
+                                        }
+                                    } else {
+                                        focused.toggle()
+                                    
                                         withAnimation {
                                             error = ""
+                                        
                                         }
-                                        userInfoViewModel.update()
-                                    } else {
-                                        saveable = false
-                                        canceable = false
-                                        withAnimation {
-                                            error = "your birthday is too young"
-                                        }
+                                        
                                     }
-                                }
-                            HStack {
-                                Text("Height")
-                                Spacer()
-                                if !showHeightPicker {
-                                    Text("\(String(format: "%.1f", userInfoViewModel.userInfo.height)) cm").onTapGesture {
-                                        showHeightPicker.toggle()
-                                    }
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.red)
-                                        .frame(width: 20, height: 20)
-                                        .onTapGesture {
-                                            showWeightPicker.toggle()
-                                        }
-                                } else {
-                                    TextField("Height", value: $userInfoViewModel.userInfo.height, format: .number).keyboardType(.decimalPad)
-                                        .focused($focused)
-                                        .multilineTextAlignment(.trailing)
-                                        .onChange(of: userInfoViewModel.userInfo.height) { newValue in
-                                            if newValue > 300 {
-                                                saveable = false
-                                                canceable = false
-                                                withAnimation {
-                                                    error = "height is too long"
-                                                }
-                                            } else if newValue < 90 {
-                                                saveable = false
-                                                canceable = false
-                                                withAnimation {
-                                                    error = "height is too short"
-                                                }
-                                            } else {
-                                                saveable = true
-                                                canceable = true
-                                                withAnimation {
-                                                    error = ""
-                                                }
-                                                
-                                            }
-                                            
-                                        }
-                                }
-                            }
-                            HStack {
-                                Text("Weight")
-                                Spacer()
-                                if !showWeightPicker {
-                                    Text("\(String(format: "%.1f", userInfoViewModel.userInfo.weight)) kg").onTapGesture {
-                                        showWeightPicker.toggle()
-                                    }
-                                    Image(systemName: "chevron.right")
-                                        .foregroundColor(.red)
-                                        .frame(width: 20, height: 20)
-                                        .onTapGesture {
-                                            showWeightPicker.toggle()
-                                        }
-                                } else {
-                                    TextField("Weight", value: $userInfoViewModel.userInfo.weight, format: .number).keyboardType(.decimalPad)
-                                        .focused($focused)
-                                        .multilineTextAlignment(.trailing)
-                                        .onChange(of: userInfoViewModel.userInfo.height) { newValue in
-                                            if newValue > 300 || newValue < 25 {
-                                                saveable = false
-                                                canceable = false
-                                                withAnimation {
-                                                    error = "enter a valid weight"
-                                                }
-                                            } else {
-                                                saveable = true
-                                                canceable = true
-                                                withAnimation {
-                                                    error = ""
-                                                }
-                                                
-                                            }
-                                            
-                                        }
-                                }
-                            }
-                            HStack {
-                                Text("Sex")
-                                Spacer()
-                                Picker("Sex", selection: $userInfoViewModel.userInfo.sex) {
-                                    ForEach(Sex.allCases, id: \.self) {
-                                        Text($0.rawValue).foregroundColor(.white)
-                                    }
-                                }.onChange(of: userInfoViewModel.userInfo.sex) { newValue in
-                                    userInfoViewModel.userInfo.sex = newValue
-                                }
-                                .frame(width: 150)
-                                .pickerStyle(.segmented)
-                            }
-                            
-                            
-                        }.listRowSeparator(.hidden)
-                        Section(header: Text("Settings").foregroundColor(.red).bold()) {
-                            Toggle("Auto Pause", isOn: $autoPause).tint(.red)
-                            Button(action: {
-                                showingAlertLogOut.toggle()
-                            }, label: {
-                                Text("Log Out")
-                                    .foregroundColor(.red)
                                     
-                            }).alert("Are you sure to log out?", isPresented: $showingAlertLogOut) {
-                                Button("Cancel", role: .cancel) { }
-                                Button("Yes", role: .destructive) {
-                                    auth.logOut()
+                                }
+                        }
+                        
+                    }
+                    DatePicker("Birthday", selection: $userInfoViewModel.userInfo.birthday, displayedComponents: [.date])
+                        .onChange(of: userInfoViewModel.userInfo.birthday) { newValue in
+                            let age = Calendar.current.dateComponents([.year], from: newValue, to: .now)
+                            if age.year ?? 0 >= 16 {
+                                withAnimation {
+                                    error = ""
+                                }
+                                userInfoViewModel.update()
+                            } else {
+                                withAnimation {
+                                    error = "Your're too young"
                                 }
                             }
-                            Button(action: {
-                                switch HealthAssistant.shared.getAuthorizationStatus() {
-                                case .sharingAuthorized:
-                                    break
-                                default:
-                                    HealthAssistant.shared.requestAuthorization()
+                        }
+                    HStack {
+                        Text("Height")
+                        Spacer()
+                        Text("\(String(format: "%.1f", userInfoViewModel.userInfo.height)) cm").onTapGesture {
+                            withAnimation {
+                                showPicker.toggle()
+                            }
+                            editType = .height
+                        }
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.red)
+                            .frame(width: 20, height: 20)
+                            .onTapGesture {
+                                withAnimation {
+                                    showPicker.toggle()
                                 }
-                            }, label: {
-                                Text(authorizationStatus)
-                                    .foregroundColor(.green)
-                            
-                            })
-                        }.listRowSeparator(.hidden)
-                    }
-                    .listStyle(.insetGrouped)
-                }
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button (action: {
-                            focused = false
-                            showHeightPicker = false
-                            showWeightPicker = false
-                            editUserName = false
+                                editType = .height
+                            }
+                    }.onChange(of: showPicker) { _ in
+                        guard editType == .height else { return }
+                        if userInfoViewModel.userInfo.height > 300 || userInfoViewModel.userInfo.height < 90 {
+                            withAnimation {
+                                error = "height is not valid"
+                            }
+                        } else {
                             userInfoViewModel.update()
-                            saveable = false
-                        }, label: {
-                            Text("Save")
-                                .foregroundColor(saveable && userInfoViewModel.isValid ? .red : .gray)
-                        })
-                        .disabled(!saveable || !userInfoViewModel.isValid)
+                            withAnimation {
+                                error = ""
+                            }
+                        }
                     }
-                    ToolbarItem(placement: .navigationBarLeading) {
-                        Button (action: {
-                            if !focused && !showHeightPicker && !showWeightPicker && !editUserName {
-                                presentationMode.wrappedValue.dismiss()
+                    .onChange(of: userInfoViewModel.userInfo.height) { _ in
+                        if userInfoViewModel.userInfo.height > 300 || userInfoViewModel.userInfo.height < 90 {
+                            withAnimation {
+                                error = "height is not valid"
+                                saveable = false
+                            }
+                        } else {
+                            withAnimation {
+                                error = ""
+                                saveable = true
+                            }
+                        }
+                    }
+                    
+                    HStack {
+                        Text("Weight")
+                        Spacer()
+                        Text("\(String(format: "%.1f", userInfoViewModel.userInfo.weight)) kg")
+                            .onTapGesture {
+                                withAnimation {
+                                    showPicker.toggle()
+                                }
+                                editType = .weight
+                        }
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(.red)
+                            .frame(width: 20, height: 20)
+                            .onTapGesture {
+                                withAnimation {
+                                    showPicker.toggle()
+                                }
+                                editType = .weight
+                            }
+                    }
+                    .onChange(of: showPicker) { _ in
+                        guard editType == .weight else { return }
+                        if userInfoViewModel.userInfo.weight > 300 || userInfoViewModel.userInfo.weight < 25 {
+                            withAnimation {
+                                error = "weight is not valid"
+                            }
+                        } else {
+                            userInfoViewModel.update()
+                            withAnimation {
+                                error = ""
                             }
                             
-                            focused = false
-                            showHeightPicker = false
-                            showWeightPicker = false
-                            editUserName = false
-                            
-                        }, label: {
-                            Text("Cancel")
-                                .foregroundColor(canceable && userInfoViewModel.isValid ? .blue : .gray)
-                        })
-                        .disabled(!canceable && !userInfoViewModel.isValid)
+                        }
+                        
                     }
+                    .onChange(of: userInfoViewModel.userInfo.weight) { _ in
+                        if userInfoViewModel.userInfo.weight > 300 || userInfoViewModel.userInfo.weight < 25 {
+                            withAnimation {
+                                error = "weight is not valid"
+                                saveable = false
+                            }
+                        } else {
+                            
+                            withAnimation {
+                                error = ""
+                                saveable = true
+                            }
+                            
+                        }
+                    }
+                    HStack {
+                        Text("Sex")
+                        Spacer()
+                        Picker("Sex", selection: $userInfoViewModel.userInfo.sex) {
+                            ForEach(Sex.allCases, id: \.self) {
+                                Text($0.rawValue).foregroundColor(.white)
+                            }
+                        }.onChange(of: userInfoViewModel.userInfo.sex) { newValue in
+                            userInfoViewModel.userInfo.sex = newValue
+                        }
+                        .frame(width: 150)
+                        .pickerStyle(.segmented)
+                    }
+                    
+                    
+                }.listRowSeparator(.hidden)
+                Section(header: Text("Settings").foregroundColor(.red).bold()) {
+                    Toggle("Auto Pause", isOn: $autoPause).tint(.red)
+                    Button(action: {
+                        showingAlertLogOut.toggle()
+                    }, label: {
+                        Text("Log Out")
+                            .foregroundColor(.red)
+                            
+                    }).alert("Are you sure to log out?", isPresented: $showingAlertLogOut) {
+                        Button("Cancel", role: .cancel) { }
+                        Button("Yes", role: .destructive) {
+                            auth.logOut()
+                        }
+                    }
+                    Button(action: {
+                        switch HealthAssistant.shared.getAuthorizationStatus() {
+                        case .sharingAuthorized:
+                            break
+                        default:
+                            HealthAssistant.shared.requestAuthorization()
+                        }
+                    }, label: {
+                        Text(authorizationStatus)
+                            .foregroundColor(.green)
+                    
+                    })
+                }.listRowSeparator(.hidden)
+            }
+            .listStyle(.insetGrouped)
+            if showPicker {
+                VStack {
+                    switch editType {
+                    case .height:
+                        FastForwardPicker(title: "Height", value: $userInfoViewModel.userInfo.height, diff: 0.5, valueInterpolation: String(format: "%.1f", userInfoViewModel.userInfo.height))
+                    case .weight:
+                        FastForwardPicker(title: "Weight", value: $userInfoViewModel.userInfo.weight, diff: 0.5, valueInterpolation: String(format: "%.1f", userInfoViewModel.userInfo.weight))
+                    }
+                    
+                    Button(action: {
+                        withAnimation {
+                            self.showPicker.toggle()
+                        }
+                    }, label: {
+                        Text("Save")
+                            .foregroundColor(saveable ? .red : .gray)
+                            .bold()
+                            .padding(5)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 5)
+                                    .stroke(Color.red, lineWidth: 2)
+                            )
+                    })
+                    .padding(5)
+                    .disabled(!saveable)
                 }
-                .navigationBarTitleDisplayMode(.inline)
+                .offset(y: showPicker ? 0 : 300)
             }
         }
+        
     }
 }
 
 enum Sex: String, Equatable, CaseIterable, Codable {
     case male, female
+}
+
+enum UserInfoType: String {
+    case height, weight
 }

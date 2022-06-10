@@ -3,7 +3,9 @@
 import SwiftUI
 
 struct IntervalsView: View {
+    @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var sessionVM: SessionViewModel
+     
     var body: some View {
         List {
             HStack {
@@ -25,6 +27,9 @@ struct IntervalsView: View {
                 }
             }
 
+        }.onAppear {
+            UITableView.appearance().backgroundColor = UIColor.clear
+            
         }
     }
 }

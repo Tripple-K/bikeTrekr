@@ -4,7 +4,6 @@ import SwiftUIFontIcon
 import Combine
 
 struct MainView: View {
-    @Environment(\.scenePhase) var scenePhase
     @EnvironmentObject var auth: AuthenticationService
     @EnvironmentObject var sessionViewModel: SessionViewModel
     
@@ -254,17 +253,6 @@ struct MainView: View {
                 self.pause()
             }
         }
-        .onChange(of: scenePhase) { phase in
-            switch phase {
-            case .background:
-                sessionViewModel.saveTemp()
-            default:
-                break
-            }
-        }
-        .onDisappear {
-            sessionViewModel.saveTemp()
-        }
     }
     
     func pause() {
@@ -283,17 +271,8 @@ struct MainView: View {
         generatorHeavy.impactOccurred()
         checkSpeed = 0
         
-        guard let userId = auth.user?.uid else {
-            return
-        }
-        
-        sessionViewModel.session.userId = userId
-        
-        if sessionViewModel.session.distance > 0 {
-            SessionRepository.shared.add(sessionViewModel.session)
-        }
-        
         sessionViewModel.finish()
+        MapView.mapView.removeOverlays(MapView.mapView.overlays)
     }
     
     func validate(text: String, with regex: String) -> Bool {

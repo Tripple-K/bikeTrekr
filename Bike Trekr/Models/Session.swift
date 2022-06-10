@@ -52,6 +52,18 @@ struct Session: Identifiable, Codable {
     }
     
     var intervals = [Interval]()
+    
+    init (_ session: SessionDefaults) {
+        self.date = session.date
+        self.goal = session.goal
+        self.typeSession = session.typeSession
+        self.userId = session.userId
+        self.intervals = session.intervals
+    }
+    
+    init () {
+        
+    }
 }
 
 enum SessionType: String, Equatable, CaseIterable, Codable {
@@ -64,16 +76,15 @@ struct Interval: Codable {
     var distance: Double = 0
     var duration: Int = 0
     
+    var speeds = [CLLocationSpeed]()
+    
     var avSpeed: Double {
-        let speeds = locations.compactMap { location -> CLLocationSpeed in
-            return location.speed > 0 ? location.speed : 0
-        }
-        guard !locations.isEmpty else { return 0 }
-        return speeds.reduce(0, +) / Double(locations.count)
+        guard !speeds.isEmpty else { return 0 }
+        return speeds.reduce(0, +) / Double(speeds.count)
     }
     
     var maxSpeed: Double {
-        return locations.max(by: {$0.speed < $1.speed})?.speed ?? 0
+        return speeds.max() ?? 0
     }
     
     var locations = [Location]()
@@ -92,4 +103,21 @@ extension SessionType {
  
 enum Period: String, Equatable, CaseIterable {
     case week, month, year, all
+}
+
+
+struct SessionDefaults: Codable {
+    let date: Date
+    var goal: GoalType
+    var typeSession: SessionType
+    var userId: String?
+    var intervals: [Interval]
+    
+    init (_ session: Session) {
+        self.date = session.date
+        self.goal = session.goal
+        self.typeSession = session.typeSession
+        self.userId = session.userId
+        self.intervals = session.intervals
+    }
 }

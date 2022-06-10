@@ -22,7 +22,7 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
     private var cancellables: Set<AnyCancellable> = []
     private let manager = CLLocationManager()
     var canStart = false
-
+    
     var timer = Timer()
     
     override init () {
@@ -56,7 +56,7 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
             let span = MKCoordinateSpan(latitudeDelta: 0.005, longitudeDelta: 0.005)
             region = MKCoordinateRegion(center: center, span: span)
             
-            speed = manager.location?.speed ?? 0
+            speed = (manager.location?.speed ?? 0) * 3.6
             
             guard status == .running else { return }
             
@@ -71,13 +71,15 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
             
             guard let last = self.session.intervals.last else { return }
             self.session.intervals[last.index - 1].locations.append(location)
+            self.session.intervals[last.index - 1].speeds.append((manager.location?.speed ?? 0) * 3.6)
             if self.session.goal != .speed {
                 self.session.intervals[last.index - 1].distance = self.distance.truncatingRemainder(dividingBy: 1)
             } else {
                 self.session.intervals[last.index - 1].distance = self.distance
             }
             
-
+            saveTemp()
+            
         }
         
     }
@@ -100,7 +102,7 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
             timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { timer in
                 guard let last = self.session.intervals.last else { return }
                 self.session.intervals[last.index - 1].duration += 1
-
+                
             }
             status = .running
         case .stop:
@@ -132,12 +134,24 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
     }
     
     func finish() {
+        
+        guard let userId = Auth.auth().currentUser?.uid else {
+            return
+        }
+        
+        session.userId = userId
+        
+        if session.distance > 0 {
+            SessionRepository.shared.add(session)
+        }
+        
         removeTemp()
         HealthAssistant.shared.didAddSession(with: session)
         canStart = false
         speed = 0
+        distance = 0
         status = .stop
-        
+        MapView.mapView.removeOverlays(MapView.mapView.overlays)
         manager.allowsBackgroundLocationUpdates = false
         manager.stopMonitoringSignificantLocationChanges()
         let type = session.typeSession
@@ -150,77 +164,29 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
     
     func saveTemp() {
         guard status != .stop else { return }
-        guard let userId = UserRepository.shared.userInfo?.userId else { return }
         
-        
-        store.collection("session")
-            .whereField("userId", isEqualTo: userId)
-            .getDocuments { snapshop, error in
-                if let error = error {
-                    print(error.localizedDescription)
-                }
-                
-                guard let document = snapshop?.documents.first else {
-                    do {
-                        self.session.userId = userId
-                        _ = try self.store.collection("session").addDocument(from: self.session)
-                    } catch {
-                        print("Unable to add session: \(error.localizedDescription).")
-                    }
-                    return
-                }
-                
-                do {
-                    self.session.userId = userId
-                    try self.store.collection("session").document(document.documentID).setData(from: self.session)
-                } catch {
-                    print("Unable to update session: \(error.localizedDescription).")
-                }
-            }
-        
+        let encoder = JSONEncoder()
+        if let data = try? encoder.encode(SessionDefaults(session)) {
+            UserDefaults.standard.set(data, forKey: "session")
+        }
     }
     
     func removeTemp() {
-        guard let userId = UserRepository.shared.userInfo?.userId else { return }
         
-        store.collection("session")
-            .whereField("userId", isEqualTo: userId)
-            .getDocuments { snapshop, error in
-                if let error = error {
-                    print(error.localizedDescription)
-                }
-                
-                guard let document = snapshop?.documents.first else {
-                    return
-                }
-                
-                self.store.collection("session").document(document.documentID).delete { error in
-                    if let error = error {
-                        print(error.localizedDescription)
-                    }
-                }
-            }
+        UserDefaults.standard.removeObject(forKey: "session")
         
     }
     
     func getTemp() {
-        guard let userId = UserRepository.shared.userInfo?.userId else { return }
         
-        store.collection("session")
-            .whereField("userId", isEqualTo: userId)
-            .addSnapshotListener { snapshop, error in
-                if let error = error {
-                    print(error.localizedDescription)
-                }
-                
-                guard let document = snapshop?.documents.first else {
-                    return
-                }
-                if let session = try? document.data(as: Session.self) {
-                    self.session = session
-                    self.loadPolyline()
-                }
+        let decoder = JSONDecoder()
+        
+        if let data = UserDefaults.standard.object(forKey: "session") as? Data {
+            if let session = try? decoder.decode(SessionDefaults.self, from: data) {
+                self.session = Session(session)
+                loadPolyline()
             }
+        }
     }
     
     func loadPolyline() {

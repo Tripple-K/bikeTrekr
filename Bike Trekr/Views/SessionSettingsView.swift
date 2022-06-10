@@ -39,6 +39,8 @@ struct SessionSettingsView: View {
     var duration: String {
         return "\(String(format: "%02d", seconds / 3600)):\(String(format: "%02d", (seconds % 3600) / 60)):\(String(format: "%02d", (seconds % 3600) % 60))"
     }
+    @State private var actionLongPress: Timer?
+    @State var isLongPress = false
     
     
     var body: some View {
@@ -116,74 +118,15 @@ struct SessionSettingsView: View {
                 VStack {
                     switch goal {
                     case .distance:
-                        Text("Distance").foregroundColor(.gray)
-                        HStack {
-                            Button (action: {
-                                distance -= 0.05
-                                generatorLight.impactOccurred()
-                            }, label: {
-                                Image(systemName: "minus.square")
-                                    .font(.title)
-                            })
-                            .foregroundColor(.red)
-                            Text("\(distanceFormatted) km")
-                                .font(.title2)
-                                .simultaneousGesture(LongPressGesture(minimumDuration: 0)
-                                    .updating($tap) { curr, gest, transition in
-                                        generatorHeavy.impactOccurred()
-                                        gest = curr
-                                    }
-                                    .sequenced(before: DragGesture().onChanged { gesture in
-                                        generatorLight.impactOccurred()
-                                        distance = abs(gesture.translation.height / 5)
-                                    })
-                                )
-                            Button (action: {
-                                distance += 0.05
-                                generatorLight.impactOccurred()
-                            }, label: {
-                                Image(systemName: "plus.app")
-                                    .font(.title)
-                            })
-                            .foregroundColor(.red)
-                        }
+                        FastForwardPicker(title: "Distance", value: $distance, diff: 0.05, valueInterpolation: distanceFormatted)
                     case .duration:
-                        Text("Duration").foregroundColor(.gray)
-                        HStack {
-                            Button (action: {
-                                seconds -= 5
-                                generatorLight.impactOccurred()
-                            }, label: {
-                                Image(systemName: "minus.square")
-                                    .font(.title)
-                            })
-                            .foregroundColor(.red)
-                            Text(duration)
-                                .font(.title2)
-                                .simultaneousGesture(LongPressGesture(minimumDuration: 0)
-                                    .updating($tap) { curr, gest, transition in
-                                        generatorLight.impactOccurred()
-                                        gest = curr
-                                    }
-                                    .sequenced(before: DragGesture().onChanged { gesture in
-                                        generatorLight.impactOccurred()
-                                        seconds = Int(abs(gesture.translation.height * 10))
-                                    })
-                                )
-                            Button (action: {
-                                seconds += 5
-                                generatorLight.impactOccurred()
-                            }, label: {
-                                Image(systemName: "plus.app")
-                                    .font(.title)
-                            })
-                            .foregroundColor(.red)
-                        }
+                        FastForwardPicker(title: "Duration", value: $seconds, diff: 1, valueInterpolation: duration)
                     default:
                         EmptyView()
                     }
                    
-                }.offset(y: showGoalPicker ? 0 : 300)
+                }
+                .offset(y: showGoalPicker ? 0 : 300)
             }
         }
         

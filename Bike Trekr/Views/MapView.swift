@@ -7,23 +7,23 @@ struct MapView: UIViewRepresentable {
     
     typealias UIViewType = MKMapView
     @EnvironmentObject var sessionViewModel: SessionViewModel
-    static let mapView = MKMapView()
+    static let view = MKMapView()
 
     func makeUIView(context: Context) -> MKMapView {
         
-        MapView.mapView.delegate = context.coordinator
-        MapView.mapView.setRegion(sessionViewModel.region, animated: true)
+        MapView.view.delegate = context.coordinator
+        MapView.view.setRegion(sessionViewModel.region, animated: true)
         
-        MapView.mapView.showsUserLocation = true
-        MapView.mapView.userTrackingMode = .followWithHeading
-        MapView.mapView.isUserInteractionEnabled = false
-        return MapView.mapView
+        MapView.view.showsUserLocation = true
+        MapView.view.userTrackingMode = .followWithHeading
+        MapView.view.isUserInteractionEnabled = false
+        return MapView.view
     }
     
     func updateUIView(_ uiView: MKMapView, context: Context) {
         if sessionViewModel.status == .running {
             
-            MapView.mapView.removeOverlays(uiView.overlays)
+            MapView.view.removeOverlays(uiView.overlays)
             
             var locations = [CLLocationCoordinate2D]()
             sessionViewModel.session.intervals.forEach { interval in
@@ -33,7 +33,7 @@ struct MapView: UIViewRepresentable {
             }
             let polyline = MKPolyline(coordinates: locations, count: locations.count)
             
-            MapView.mapView.addOverlay(polyline)
+            MapView.view.addOverlay(polyline)
             
         }
     }

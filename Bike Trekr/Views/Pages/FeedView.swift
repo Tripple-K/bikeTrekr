@@ -2,11 +2,10 @@
 
 
 import SwiftUI
+import FirebaseAuth
 
 struct FeedView: View {
-
-    @EnvironmentObject var auth: AuthenticationService
-    @EnvironmentObject var userInfoViewModel: UserInfoViewModel
+    
     @Environment(\.colorScheme) var colorScheme
     
     @State var sections = [String]() {
@@ -14,6 +13,7 @@ struct FeedView: View {
             currSection = sections.count - 1
         }
     }
+    @ObservedObject var userInfoVM = UserInfoViewModel()
     @State var currSection = 0
     
     @State var period: Period = .week
@@ -21,7 +21,8 @@ struct FeedView: View {
     
     @State var loading = true
     
-    @State var sessions: [Session] = []
+    @State var sessions = [Session]()
+    
     
     var body: some View {
         NavigationView {
@@ -30,7 +31,6 @@ struct FeedView: View {
                 ScrollView (showsIndicators: false) {
                     
                     VStack {
-                        
                         Picker("Period", selection: $period) {
                             ForEach(Period.allCases, id: \.self) {
                                 Text($0.rawValue.capitalized)
@@ -58,16 +58,20 @@ struct FeedView: View {
                     .background(RoundedRectangle(cornerRadius: 10).fill(Color("darkGray")))
                     .padding()
                     
-                    
-                    ForEach(sessions) { session in
-                        NavigationLink(destination: DetailSessionView(session: session)) {
-                            SessionView(session: session)
-                                .background(RoundedRectangle(cornerRadius: 10).fill(Color("darkGray")))
-                                .padding()
-                                .foregroundColor(colorScheme == .dark ? .white : .black)
+                    if SessionRepository.shared.isLoading {
+                        ProgressView()
+                    } else {
+                        ForEach(sessions) { session in
+                            NavigationLink(destination: DetailSessionView(session: session)) {
+                                SessionView(session: session)
+                                    .background(RoundedRectangle(cornerRadius: 10).fill(Color("darkGray")))
+                                    .padding()
+                                    .foregroundColor(colorScheme == .dark ? .white : .black)
+                            }
                         }
+                        
                     }
-                   
+                    
                     
                 }
             }
@@ -98,32 +102,40 @@ struct FeedView: View {
                     Button(action: {
                         self.showProfile.toggle()
                     }, label: {
-                        AsyncImage(url: auth.user?.photoURL, content: { phase in
-                            switch phase {
-                            case .empty:
-                                ProgressView()
-                            case .success(let image):
-                                image.resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 33, height: 33)
-                            case .failure:
-                                Image(systemName: "person.circle.fill").frame(width: 33, height: 33)
-                            @unknown default:
-                                EmptyView()
-                            }
-                        })
+                        if let url = Auth.auth().currentUser?.photoURL {
+                            AsyncImage(url: url, content: { phase in
+                                switch phase {
+                                case .empty:
+                                    ProgressView()
+                                case .success(let image):
+                                    image.resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 33, height: 33)
+                                case .failure:
+                                    Image(systemName: "person.circle.fill").frame(width: 33, height: 33)
+                                @unknown default:
+                                    EmptyView()
+                                }
+                            })
                             .background(Color(uiColor: UIColor.systemFill))
                             .clipShape(Circle())
-                    })
-                   
+                        } else {
+                            Image(systemName: "person.circle.fill").frame(width: 33, height: 33)
+                        }
                         
+                    })
+                    
+                    
                 }
             }
             .background(Color("background"))
         }
+        .onReceive(UserRepository.shared.$userInfo) { userInfo in
+            guard let userInfo = userInfo else { return }
+            userInfoVM.userInfo = userInfo
+        }
         .sheet(isPresented: $showProfile) {
-            ProfileView()
-                .environmentObject(userInfoViewModel)
+            ProfileView(userInfoViewModel: userInfoVM)
         }
     }
     

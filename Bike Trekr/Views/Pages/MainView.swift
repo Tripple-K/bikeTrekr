@@ -4,8 +4,7 @@ import SwiftUIFontIcon
 import Combine
 
 struct MainView: View {
-    @EnvironmentObject var auth: AuthenticationService
-    @EnvironmentObject var sessionViewModel: SessionViewModel
+    @ObservedObject var sessionViewModel = SessionViewModel()
     
     let generatorHeavy = UIImpactFeedbackGenerator(style: .heavy)
     let generatorLight = UIImpactFeedbackGenerator(style: .light)
@@ -21,7 +20,6 @@ struct MainView: View {
 
     @State var showGoalSheet = false
     @State var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    
     
     @State var section = 0
 
@@ -55,6 +53,7 @@ struct MainView: View {
                                 ZStack {
                                    
                                     mapView
+                                        .environmentObject(sessionViewModel)
                                         .frame(width: proxy.size.width, height: proxy.size.width, alignment: .bottom)
                                         .opacity(opacity)
                                         .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .top, endPoint: .bottom))
@@ -94,6 +93,7 @@ struct MainView: View {
                             ZStack {
                                
                                 mapView
+                                    .environmentObject(sessionViewModel)
                                     .frame(width: proxy.size.width, height: proxy.size.width, alignment: .bottom)
                                     .opacity(opacity)
                                     .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .top, endPoint: .bottom))
@@ -233,6 +233,9 @@ struct MainView: View {
         .alert(isPresented: $showAlertLocationNeeded) {
             Alert(title: Text("Location is needed"), message: Text("Please, make sure that in iPhone settings location for Bike Trekr is allowed"))
         }
+        .onAppear {
+            sessionViewModel.getTemp()
+        }
         .onReceive(timer) { _ in
             guard autoPause else { return }
             if sessionViewModel.status == .running {
@@ -272,7 +275,7 @@ struct MainView: View {
         checkSpeed = 0
         
         sessionViewModel.finish()
-        MapView.mapView.removeOverlays(MapView.mapView.overlays)
+        MapView.view.removeOverlays(MapView.view.overlays)
     }
     
     func validate(text: String, with regex: String) -> Bool {

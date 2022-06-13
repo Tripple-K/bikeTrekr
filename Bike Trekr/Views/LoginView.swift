@@ -97,7 +97,7 @@ struct LoginView: View {
                         print(error?.localizedDescription as Any)
                         return
                     }
-                    guard let user = Auth.auth().currentUser else {
+                    guard let user = Auth.auth().currentUser, let email = user.email else {
                         print("No user")
                         return
                     }

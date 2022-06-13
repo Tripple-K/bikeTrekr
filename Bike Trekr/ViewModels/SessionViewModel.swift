@@ -5,7 +5,6 @@ import MapKit
 import FirebaseAuth
 import HealthKit
 import FirebaseFirestore
-import FirebaseDatabaseSwift
 import SwiftUI
 
 class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationManagerDelegate {
@@ -19,6 +18,7 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
     @AppStorage("goal") var goal: GoalType = .none
     
     private let store = Firestore.firestore()
+    private let path: String = "sessions"
     private var cancellables: Set<AnyCancellable> = []
     private let manager = CLLocationManager()
     var canStart = false
@@ -142,7 +142,7 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
         session.userId = userId
         
         if session.distance > 0 {
-            SessionRepository.shared.add(session)
+            save()
         }
         
         removeTemp()
@@ -151,7 +151,7 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
         speed = 0
         distance = 0
         status = .stop
-        MapView.mapView.removeOverlays(MapView.mapView.overlays)
+        MapView.view.removeOverlays(MapView.view.overlays)
         manager.allowsBackgroundLocationUpdates = false
         manager.stopMonitoringSignificantLocationChanges()
         let type = session.typeSession
@@ -198,8 +198,18 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
         }
         
         let polyline = MKPolyline(coordinates: locations, count: locations.count)
-        MapView.mapView.addOverlay(polyline, level: .aboveRoads)
+        MapView.view.addOverlay(polyline, level: .aboveRoads)
     }
+    
+    private func save() {
+        guard let userId = session.userId else { return }
+        do {
+            _ = try store.collection(path).addDocument(from: session)
+        } catch {
+            print("Unable to add session: \(error.localizedDescription).")
+        }
+    }
+    
 }
 
 enum StatusSession {

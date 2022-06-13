@@ -3,13 +3,15 @@ import Combine
 import FirebaseFirestore
 
 class UserInfoViewModel: ObservableObject, Identifiable {
+    
     @Published var userInfo: UserInfo
     private let path: String = "usersInfo"
     private let store = Firestore.firestore()
     private var cancellables: Set<AnyCancellable> = []
-    var id = ""
+    var userId = ""
     
     var isValid: Bool {
+
         if userInfo.displayName.count > 50 || userInfo.displayName.count < 4 {
             return false
         }
@@ -26,12 +28,8 @@ class UserInfoViewModel: ObservableObject, Identifiable {
         return true
     }
     
-    init(userInfo: UserInfo) {
-        self.userInfo = userInfo
-        $userInfo
-            .compactMap { $0.id }
-            .assign(to: \.id, on: self)
-            .store(in: &cancellables)
+    init() {
+        userInfo = UserInfo()
     }
     
     func update() {

@@ -20,13 +20,6 @@ struct DetailSessionView: View {
             ScrollView(showsIndicators: false) {
                 VStack {
                     
-                    Text("OVERALL")
-                        .bold()
-                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                        .font(.footnote)
-                        .foregroundColor(.gray)
-                        .padding(.bottom, -16)
-                        .padding(.leading)
                     VStack (spacing: 0) {
                         HStack {
                             Text("Distance")
@@ -36,14 +29,15 @@ struct DetailSessionView: View {
                                 Text("km").foregroundColor(.gray).font(.body)
                             }
                         }
-                        .padding()
+                        .padding(.init(top: 8, leading: 16, bottom: 0, trailing: 16))
                         HStack {
                             Text("Duration")
                             Spacer()
                             HStack (spacing: 4) {
                                 Text("\(String(format: "%02d",  self.session.duration / 3600)):\(String(format: "%02d", ( self.session.duration % 3600) / 60)):\(String(format: "%02d", ( self.session.duration % 3600) % 60))")
                             }
-                        }.padding()
+                        }
+                        .padding(.init(top: 8, leading: 16, bottom: 0, trailing: 16))
                         HStack {
                             Text("Average Speed")
                             Spacer()
@@ -52,7 +46,8 @@ struct DetailSessionView: View {
                                 Text("km/h").foregroundColor(.gray).font(.body)
                             }
                             
-                        }.padding()
+                        }
+                        .padding(.init(top: 8, leading: 16, bottom: 0, trailing: 16))
                         HStack {
                             Text("Max Speed")
                             Spacer()
@@ -61,7 +56,8 @@ struct DetailSessionView: View {
                                 Text("km/h").foregroundColor(.gray).font(.body)
                             }
                             
-                        }.padding()
+                        }
+                        .padding(.init(top: 8, leading: 16, bottom: 0, trailing: 16))
                         HStack {
                             Text("Session Type")
                             Spacer()
@@ -75,19 +71,14 @@ struct DetailSessionView: View {
                             case .running:
                                 FontIcon.text(.awesome5Solid(code: .running), fontsize: 20).frame(width: 24, height: 24)
                             }
-                        }.padding()
+                        }
+                        .padding(.init(top: 8, leading: 16, bottom: 8, trailing: 16))
                     }
                     .font(.headline)
                     .background(RoundedRectangle(cornerRadius: 10).fill(Color("darkGray")))
                     .padding()
                     
-                    Text("MAP")
-                        .bold()
-                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                        .font(.footnote)
-                        .foregroundColor(.gray)
-                        .padding(.bottom, -16)
-                        .padding(.leading)
+                    
                     overviewMapView
                         .clipShape(RoundedRectangle(cornerRadius: 10))
                         .frame(width: UIScreen.main.bounds.width * 0.9, height: UIScreen.main.bounds.width * 0.9)
@@ -96,14 +87,6 @@ struct DetailSessionView: View {
                         }
                    
                     .padding()
-                    
-                    Text("INTERVALS")
-                        .bold()
-                        .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
-                        .font(.footnote)
-                        .foregroundColor(.gray)
-                        .padding(.bottom, -16)
-                        .padding(.leading)
                     
                    
                     VStack () {

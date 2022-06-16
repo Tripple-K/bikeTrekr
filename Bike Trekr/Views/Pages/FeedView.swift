@@ -14,7 +14,9 @@ struct FeedView: View {
         }
     }
     @ObservedObject var userInfoVM = UserInfoViewModel()
+
     @State var currSection = 0
+    
     
     @State var period: Period = .week
     @State var showProfile = false

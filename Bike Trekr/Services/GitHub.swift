@@ -1,5 +1,8 @@
 import Foundation
 import FirebaseAuth
+import SwiftUI
+
+import UIKit
 
 struct GitHub {
     
@@ -21,15 +24,8 @@ struct GitHub {
                     if let error = error {
                         print(error.localizedDescription)
                     }
-                    guard let _ = authResult?.credential as? OAuthCredential else { return }
-                    let changeRequest = Auth.auth().currentUser?.createProfileChangeRequest()
-                    changeRequest?.photoURL = authResult?.user.photoURL
-                    changeRequest?.commitChanges { result in
-                        if let errorChangeRequest = result {
-                            print(errorChangeRequest.localizedDescription)
-                        }
-                    }
-                    completion()
+                    guard let _ = authResult?.credential as? OAuthCredential, let url =  authResult?.user.photoURL else { return }
+                  
                 }
             }
         }

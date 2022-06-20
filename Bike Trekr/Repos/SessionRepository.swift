@@ -12,7 +12,7 @@ class SessionRepository: ObservableObject {
     private let path: String = "sessions"
     private let store = Firestore.firestore()
     
-    
+    @Published var isLoading = false
     @Published var sessions: [Session] = []
     
     var userId = ""
@@ -37,6 +37,8 @@ class SessionRepository: ObservableObject {
     }
     
     func get() {
+        
+        isLoading = true
         store.collection(path)
             .whereField("userId", isEqualTo: userId)
             .addSnapshotListener { querySnapshot, error in
@@ -52,6 +54,8 @@ class SessionRepository: ObservableObject {
                 self.sessions.sort(by: {
                     $0.date > $1.date
                 })
+                
+                self.isLoading = false
                 
             }
     }

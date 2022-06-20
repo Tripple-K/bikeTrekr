@@ -23,6 +23,14 @@ struct LoginView: View {
                                 UserRepository.shared.isExist(with: email, and: user.uid) { exist in
                                     if !exist {
                                         UserRepository.shared.add(UserInfo(userId: user.uid, displayName: name, email: email))
+                                        guard let url = user.photoURL else {
+                                            guard let data = UIImage(systemName: "person.circle.fill")?.jpegData(compressionQuality: 0) else { return }
+                                            StorageImages.shared.save(data)
+                                            return
+                                            
+                                            
+                                        }
+                                        StorageImages.shared.save(url)
                                     }
                                 }
                             }
@@ -101,9 +109,17 @@ struct LoginView: View {
                         print("No user")
                         return
                     }
-                    UserRepository.shared.isExist(with: user.email!, and: user.uid) { exist in
+                    UserRepository.shared.isExist(with: email, and: user.uid) { exist in
                         if !exist {
                             UserRepository.shared.add(UserInfo(userId: user.uid, displayName: user.displayName ?? "User", email: user.email!))
+                            guard let url = user.photoURL else {
+                                guard let data = UIImage(systemName: "person.circle.fill")?.jpegData(compressionQuality: 0) else { return }
+                                StorageImages.shared.save(data)
+                                return
+                                
+                                
+                            }
+                            StorageImages.shared.save(url)
                         }
                     }
                 }

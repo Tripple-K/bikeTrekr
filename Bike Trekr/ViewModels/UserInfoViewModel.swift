@@ -1,6 +1,8 @@
 import Foundation
 import Combine
 import FirebaseFirestore
+import FirebaseStorage
+import SwiftUI
 
 class UserInfoViewModel: ObservableObject, Identifiable {
     
@@ -52,3 +54,4 @@ class UserInfoViewModel: ObservableObject, Identifiable {
         }
     }
 }
+ 

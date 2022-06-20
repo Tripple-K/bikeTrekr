@@ -202,7 +202,7 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
     }
     
     private func save() {
-        guard let userId = session.userId else { return }
+        guard session.userId != nil else { return }
         do {
             _ = try store.collection(path).addDocument(from: session)
         } catch {

@@ -14,9 +14,10 @@ struct FeedView: View {
         }
     }
     @ObservedObject var userInfoVM = UserInfoViewModel()
-
+    
     @State var currSection = 0
     
+    @State var profileImage = Image(systemName: "person.circle.fill")
     
     @State var period: Period = .week
     @State var showProfile = false
@@ -104,25 +105,15 @@ struct FeedView: View {
                     Button(action: {
                         self.showProfile.toggle()
                     }, label: {
-                        if let url = Auth.auth().currentUser?.photoURL {
-                            AsyncImage(url: url, content: { phase in
-                                switch phase {
-                                case .empty:
-                                    ProgressView()
-                                case .success(let image):
-                                    image.resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                        .frame(width: 33, height: 33)
-                                case .failure:
-                                    Image(systemName: "person.circle.fill").frame(width: 33, height: 33)
-                                @unknown default:
-                                    EmptyView()
-                                }
-                            })
-                            .background(Color(uiColor: UIColor.systemFill))
-                            .clipShape(Circle())
+                        if StorageImages.shared.isLoading {
+                            ProgressView()
                         } else {
-                            Image(systemName: "person.circle.fill").frame(width: 33, height: 33)
+                            profileImage
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 33, height: 33)
+                                .background(Color(uiColor: UIColor.systemFill))
+                                .clipShape(Circle())
                         }
                         
                     })
@@ -135,7 +126,22 @@ struct FeedView: View {
         .onReceive(UserRepository.shared.$userInfo) { userInfo in
             guard let userInfo = userInfo else { return }
             userInfoVM.userInfo = userInfo
+            if let image = StorageImages.shared.image {
+                self.profileImage = image
+            } else {
+                StorageImages.shared.download { result in
+                    switch result {
+                    case .success(let image): self.profileImage = image
+                    case .failure(let error): print(error.localizedDescription)
+                    }
+                }
+            }
         }
+        .onReceive(StorageImages.shared.$image) { image in
+            guard let image = image else { return }
+            self.profileImage = image
+        }
+        
         .sheet(isPresented: $showProfile) {
             ProfileView(userInfoViewModel: userInfoVM)
         }

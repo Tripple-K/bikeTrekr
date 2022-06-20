@@ -3,15 +3,21 @@
 import SwiftUI
 import Combine
 import FirebaseAuth
+import PhotosUI
 
 struct ProfileView: View {
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject var userInfoViewModel: UserInfoViewModel
     @AppStorage("autoPause") var autoPause = true
     
-    @State var showPicker: Bool = false
+    @State var showPicker = false
     @State var showingAlertLogOut = false
+    @State var showAlertSourcePhoto = false
+    @State var showCamera = false
+    @State var showLibrary = false
     @State var editUserName = false
+    
+    @State var profileImage = Image(systemName: "person.circle.fill")
     
     @State var editType: UserInfoType = .height
     
@@ -29,6 +35,8 @@ struct ProfileView: View {
         }
     }
     
+    
+    
     var body: some View {
         VStack {
             
@@ -38,34 +46,18 @@ struct ProfileView: View {
                     
                     let height = (proxy.size.height + minY)
                     VStack {
-                        if let url = Auth.auth().currentUser?.photoURL {
-                            AsyncImage(url: url, content: { phase in
-                                switch phase {
-                                case .empty:
-                                    ProgressView()
-                                case .success(let image):
-                                    image.resizable()
-                                        .aspectRatio(contentMode: .fit)
-                                case .failure:
-                                    Image(systemName: "person.circle.fill")
-                                @unknown default:
-                                    EmptyView()
-                                }
-                            })
-                            .frame(width: 75, height: 75)
-                            .background(Color(uiColor: UIColor.systemFill))
-                            .clipShape(Circle())
-                            .frame(alignment: .center)
-                            .padding()
-                        } else {
-                            Image(systemName: "person.circle.fill")
+                        if !StorageImages.shared.isLoading {
+                            profileImage
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
                                 .frame(width: 75, height: 75)
                                 .background(Color(uiColor: UIColor.systemFill))
                                 .clipShape(Circle())
                                 .frame(alignment: .center)
                                 .padding()
+                        } else {
+                            ProgressView()
                         }
-                        
                         
                         VStack {
                             Text("\(userInfoViewModel.userInfo.displayName)")
@@ -84,6 +76,52 @@ struct ProfileView: View {
                     .background(height > 60 ? .regularMaterial : .ultraThinMaterial)
                     .cornerRadius(15)
                     .offset(y: -minY)
+                    .onTapGesture {
+                        showAlertSourcePhoto.toggle()
+                    }
+                    .confirmationDialog("", isPresented: $showAlertSourcePhoto) {
+                        Button("Take a photo") {
+                            showCamera.toggle()
+                        }
+                        
+                        Button("Choose a photo") {
+                            showLibrary.toggle()
+                        }
+                        
+                    }
+                    .sheet(isPresented: $showLibrary) {
+                        let configuration: PHPickerConfiguration = {
+                            var conf = PHPickerConfiguration(photoLibrary: PHPhotoLibrary.shared())
+                            conf.selectionLimit = 1
+                            conf.filter = .images
+                            return conf
+                        }()
+                        ImagePickerView(configuration: configuration, isPresented: $showLibrary) { image in
+                            self.profileImage = Image(uiImage: image)
+                            guard let data = image.jpegData(compressionQuality: 0) else { return }
+                            StorageImages.shared.save(data)
+                        }
+                        
+                    }
+                    .sheet(isPresented: $showCamera) {
+                        CameraPicker { image in
+                            self.profileImage = Image(uiImage: image)
+                            guard let data = image.jpegData(compressionQuality: 0) else { return }
+                            StorageImages.shared.save(data)
+                        }
+                    }
+                    .onAppear {
+                        if let image = StorageImages.shared.image {
+                            self.profileImage = image
+                        } else {
+                            StorageImages.shared.download { result in
+                                switch result {
+                                case .success(let image): self.profileImage = image
+                                case .failure(let error): print(error.localizedDescription)
+                                }
+                            }
+                        }
+                    }
                 }
                 .zIndex(1)
                 .frame(height: 180)
@@ -158,7 +196,6 @@ struct ProfileView: View {
                         }
                 } else {
                     TextField("Name", text: $userInfoViewModel.userInfo.displayName)
-                        .focused($focused)
                         .multilineTextAlignment(.trailing)
                         .frame(maxWidth: .infinity)
                         .onSubmit {
@@ -176,7 +213,6 @@ struct ProfileView: View {
                                     
                                 }
                             } else {
-                                focused.toggle()
                                 
                                 withAnimation {
                                     error = ""
@@ -360,6 +396,7 @@ struct ProfileView: View {
             .fill(Color("darkGray"))
         )
     }
+    
 }
 
 enum Sex: String, Equatable, CaseIterable, Codable {

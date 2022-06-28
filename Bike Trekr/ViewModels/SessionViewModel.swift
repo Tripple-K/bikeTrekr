@@ -42,6 +42,23 @@ class SessionViewModel: NSObject, ObservableObject, Identifiable, CLLocationMana
             .store(in: &cancellables)
     }
     
+    init (_ session: Session) {
+        self.session = session
+        super.init()
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyBest
+        manager.requestAlwaysAuthorization()
+        manager.activityType = .fitness
+        manager.distanceFilter = 5
+        manager.startUpdatingLocation()
+        $session
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                self?.duration = "\(String(format: "%02d",  $0.duration / 3600)):\(String(format: "%02d", ($0.duration % 3600) / 60)):\(String(format: "%02d", ($0.duration % 3600) % 60))"
+            }
+            .store(in: &cancellables)
+    }
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         
         if let last = locations.last {

@@ -24,7 +24,7 @@ struct GitHub {
                     if let error = error {
                         print(error.localizedDescription)
                     }
-                    guard let _ = authResult?.credential as? OAuthCredential, let url =  authResult?.user.photoURL else { return }
+                    guard let _ = authResult?.credential as? OAuthCredential else { return }
                   
                 }
             }

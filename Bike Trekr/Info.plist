@@ -2,10 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Needed Photo Library to choose a photo for your profile image</string>
-	<key>NSCameraUsageDescription</key>
-	<string>Needed camera to take a photo for your profile image</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -37,6 +33,8 @@
 	<true/>
 	<key>Location</key>
 	<string></string>
+	<key>NSCameraUsageDescription</key>
+	<string>Needed camera to take a photo for your profile image</string>
 	<key>NSHealthClinicalHealthRecordsShareUsageDescription</key>
 	<string></string>
 	<key>NSHealthShareUsageDescription</key>
@@ -47,6 +45,8 @@
 	<string></string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string></string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Needed Photo Library to choose a photo for your profile image</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Font Awesome 5 Brands-Regular-400.otf</string>
@@ -63,7 +63,9 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string></string>
+		<string>fetch</string>
 		<string>location</string>
+		<string>remote-notification</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict>

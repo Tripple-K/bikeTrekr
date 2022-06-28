@@ -48,7 +48,15 @@ struct Session: Identifiable, Codable {
     }
     
     var week: String {
-        return date.formatted(.dateTime.year().month().week())
+        return date.formatted(.dateTime.year().month().week(.weekOfMonth))
+    }
+    
+    var weekday: Int? {
+        return Calendar.current.component(.weekday, from: date)
+    }
+    
+    var monthDay: Int? {
+        return Int(date.formatted(.dateTime.year().month().day(.ordinalOfDayInMonth)))
     }
     
     var intervals = [Interval]()

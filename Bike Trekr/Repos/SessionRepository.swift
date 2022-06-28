@@ -64,6 +64,10 @@ class SessionRepository: ObservableObject {
         guard period != .all else { return [] }
         var set = Set<String>()
         
+        sessions.sort(by: {
+            $0.date > $1.date
+        })
+        
         sessions.forEach {
             switch period {
             case .week:

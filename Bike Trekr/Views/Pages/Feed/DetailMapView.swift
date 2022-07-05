@@ -112,63 +112,65 @@ struct DetailMapView: UIViewRepresentable {
         span.longitudeDelta *= 1.1
         return MKCoordinateRegion(center: center, span: span)
     }
+    
+    class Coordinator: NSObject, MKMapViewDelegate {
+        var parent: DetailMapView
+        
+        init(_ parent: DetailMapView) {
+            self.parent = parent
+        }
+        
+        func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+            if let routePolyline = overlay as? MKPolyline {
+                let renderer = MKPolylineRenderer(polyline: routePolyline)
+                renderer.strokeColor = UIColor.red
+                renderer.lineWidth = 7
+                return renderer
+            }
+            
+            if let point = overlay as? Point {
+                let circle = MKCircle(center: point.coordinate, radius: point.boundingMapRect.width)
+                let renderer = MKCircleRenderer(circle: circle)
+                renderer.strokeColor = .gray
+                renderer.lineWidth = 3
+                renderer.fillColor = point.color
+                return renderer
+            }
+            return MKOverlayRenderer()
+        }
+        
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            var annotationView = MKAnnotationView()
+            guard let annotation = annotation as? DistanceAnnotation else {return nil}
+            let identifier = "distance"
+            if let dequedView = mapView.dequeueReusableAnnotationView(
+                withIdentifier: identifier)
+                as? MKMarkerAnnotationView {
+                annotationView = dequedView
+            } else{
+                annotationView = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+            }
+            
+            let altitudeVw = UIView(frame: CGRect(x: 0, y: 0, width: 50, height: 30))
+            let lblTitle = UILabel(frame: CGRect(x: 0, y: 0, width: 50, height: 30))
+            lblTitle.font = lblTitle.font.withSize(10)
+            lblTitle.text = annotation.title
+            lblTitle.numberOfLines = 10
+            lblTitle.font = UIFont.boldSystemFont(ofSize: 18)
+            lblTitle.textAlignment = NSTextAlignment.center
+            lblTitle.textColor = UIColor.black
+            lblTitle.backgroundColor = UIColor.clear
+            altitudeVw.layer.cornerRadius = 6.0
+            altitudeVw.backgroundColor = .white
+            altitudeVw.addSubview(lblTitle)
+            annotationView.addSubview(altitudeVw)
+            return annotationView
+        }
+        
+    }
+
 }
 
-class Coordinator: NSObject, MKMapViewDelegate {
-    var parent: DetailMapView
-    
-    init(_ parent: DetailMapView) {
-        self.parent = parent
-    }
-    
-    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
-        if let routePolyline = overlay as? MKPolyline {
-            let renderer = MKPolylineRenderer(polyline: routePolyline)
-            renderer.strokeColor = UIColor.red
-            renderer.lineWidth = 7
-            return renderer
-        }
-        
-        if let point = overlay as? Point {
-            let circle = MKCircle(center: point.coordinate, radius: point.boundingMapRect.width)
-            let renderer = MKCircleRenderer(circle: circle)
-            renderer.strokeColor = .gray
-            renderer.lineWidth = 3
-            renderer.fillColor = point.color
-            return renderer
-        }
-        return MKOverlayRenderer()
-    }
-    
-    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        var annotationView = MKAnnotationView()
-        guard let annotation = annotation as? DistanceAnnotation else {return nil}
-        let identifier = "distance"
-        if let dequedView = mapView.dequeueReusableAnnotationView(
-            withIdentifier: identifier)
-            as? MKMarkerAnnotationView {
-            annotationView = dequedView
-        } else{
-            annotationView = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-        }
-        
-        let altitudeVw = UIView(frame: CGRect(x: 0, y: 0, width: 50, height: 30))
-        let lblTitle = UILabel(frame: CGRect(x: 0, y: 0, width: 50, height: 30))
-        lblTitle.font = lblTitle.font.withSize(10)
-        lblTitle.text = annotation.title
-        lblTitle.numberOfLines = 10
-        lblTitle.font = UIFont.boldSystemFont(ofSize: 18)
-        lblTitle.textAlignment = NSTextAlignment.center
-        lblTitle.textColor = UIColor.black
-        lblTitle.backgroundColor = UIColor.clear
-        altitudeVw.layer.cornerRadius = 6.0
-        altitudeVw.backgroundColor = .white
-        altitudeVw.addSubview(lblTitle)
-        annotationView.addSubview(altitudeVw)
-        return annotationView
-    }
-    
-}
 
 class DistanceAnnotation: NSObject, MKAnnotation {
     var coordinate: CLLocationCoordinate2D

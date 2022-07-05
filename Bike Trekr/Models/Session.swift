@@ -48,15 +48,33 @@ struct Session: Identifiable, Codable {
     }
     
     var week: String {
-        return date.formatted(.dateTime.year().month().week(.weekOfMonth))
+        guard let first = date.startOfWeek, let end = date.endOfWeek else { return "" }
+        let formatter = DateFormatter(with: "dd.MM")
+        return formatter.string(from: first) + "-" + formatter.string(from: end)
+    }
+    
+    var weekOfMonth: String {
+        guard let startOfMonth = date.startOfMonth,
+            let endOfMonth = date.endOfMonth,
+              let startOfWeek = date.startOfWeek,
+              let endOfWeek = date.endOfWeek
+        else { return "" }
+        let formatter = DateFormatter(with: "dd.MM")
+        if startOfMonth > startOfWeek  {
+            return formatter.string(from: startOfMonth) + "-" + formatter.string(from: endOfWeek)
+        } else if endOfWeek > endOfMonth {
+            return formatter.string(from: startOfWeek) + "-" + formatter.string(from: endOfMonth)
+        } else {
+            return formatter.string(from: startOfWeek) + "-" + formatter.string(from: endOfWeek)
+        }
     }
     
     var weekday: Int? {
         return Calendar.current.component(.weekday, from: date)
     }
     
-    var monthDay: Int? {
-        return Int(date.formatted(.dateTime.year().month().day(.ordinalOfDayInMonth)))
+    var weekOfYear: Int? {
+        return Calendar.current.component(.weekOfYear, from: date)
     }
     
     var intervals = [Interval]()
@@ -110,7 +128,11 @@ extension SessionType {
 
  
 enum Period: String, Equatable, CaseIterable {
-    case week, month, year, all
+    case weekOfYear = "week", weekOfMonth, month, year, all
+    
+    static var allCases: [Period] {
+        return [.weekOfYear, .month, .year, .all]
+    }
 }
 
 
@@ -129,3 +151,4 @@ struct SessionDefaults: Codable {
         self.intervals = session.intervals
     }
 }
+

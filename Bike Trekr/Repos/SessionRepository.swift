@@ -62,26 +62,26 @@ class SessionRepository: ObservableObject {
     
     func getPeriods(_ period: Period) -> [String] {
         guard period != .all else { return [] }
-        var set = Set<String>()
+        var sections = [String]()
         
-        sessions.sort(by: {
+        let sessions = sessions.sorted(by: {
             $0.date > $1.date
         })
         
         sessions.forEach {
             switch period {
-            case .week:
-                set.insert($0.week)
-            case .month:
-                set.insert($0.month)
-            case .year:
-                set.insert($0.year)
-            default: break
+                case .weekOfYear:
+                    sections.contains($0.week) ? nil : sections.append($0.week)
+                case .month:
+                    sections.contains($0.month) ? nil : sections.append($0.month)
+                case .year:
+                    sections.contains($0.year) ? nil : sections.append($0.year)
+                default: break
             }
         }
-        return Array(set.reversed())
+        return sections.reversed()
     }
-
+    
     
     func add(_ session: Session) {
         do {

@@ -48,19 +48,14 @@ struct MainView: View {
                            
                             
                             GeometryReader { proxy in
-                                
-                                
-                                ZStack {
-                                   
-                                    mapView
-                                        .environmentObject(sessionViewModel)
-                                        .frame(width: proxy.size.width, height: proxy.size.width, alignment: .bottom)
-                                        .opacity(opacity)
-                                        .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .top, endPoint: .bottom))
-                                        .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .leading, endPoint: .trailing))
-                                        .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .bottomLeading, endPoint: .topTrailing))
-                                        .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .topLeading, endPoint: .bottomTrailing))
-                                }.frame(width: proxy.size.width, height: proxy.size.height, alignment: .bottom)
+                                mapView
+                                    .environmentObject(sessionViewModel)
+                                    .frame(width: proxy.size.width, height: proxy.size.width, alignment: .bottom)
+                                    .opacity(opacity)
+                                    .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .top, endPoint: .bottom))
+                                    .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .leading, endPoint: .trailing))
+                                    .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .bottomLeading, endPoint: .topTrailing))
+                                    .mask(LinearGradient(gradient: Gradient(colors: gradientColors), startPoint: .topLeading, endPoint: .bottomTrailing))
                             }
                             .onAppear {
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
@@ -122,7 +117,10 @@ struct MainView: View {
                             
                             Image(systemName: "gearshape.fill")
                                 .foregroundColor(.white)
-                        }.onTapGesture {
+                        }
+                        .transition(.move(edge: .trailing))
+                        .id("gearshape.fill")
+                        .onTapGesture {
                             showSessionSetUp.toggle()
                         }
                         .sheet(isPresented: $showSessionSetUp) {
@@ -190,12 +188,18 @@ struct MainView: View {
                             showOverlayBeforeSession = true
                         }
                         else {
-                            pause()
+                            withAnimation {
+                                pause()
+                            }
+                           
                         }
                         
                     }
                     .fullScreenCover(isPresented: $showOverlayBeforeSession, onDismiss: {
-                        self.start()
+                        withAnimation {
+                            self.start()
+                        }
+                       
                     }) {
                         StartUpSessionView(timeBeforeSession: $timerBeforeSession)
                     }
@@ -208,6 +212,8 @@ struct MainView: View {
                             Image(systemName: "stop.fill")
                                 .foregroundColor(.white)
                         }
+                        .transition(.move(edge: .leading))
+                        .id("stop.fill")
                         .scaleEffect(scaleStopButton)
                         .offset(x: scaleStopButton == 1 ? 0 : 10, y: 0)
                         .foregroundColor(.red)
@@ -216,8 +222,12 @@ struct MainView: View {
                                 .onEnded { _ in
                                     withAnimation {
                                         scaleStopButton = 1
+                                        
                                     }
-                                    self.finish()
+                                    withAnimation (.default.delay(0.3)) {
+                                        self.finish()
+                                    }
+                                 
                                 }
                                 .onChanged { _ in
                                     withAnimation {

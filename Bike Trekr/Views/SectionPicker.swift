@@ -15,18 +15,20 @@ struct SectionPicker: View {
         if sections.count > 0 {
             HStack {
                 Button(action: {
-                    if selection > 0 {
-                        selection -= 1
-                    }
-                    if selection <= 0 {
-                        prev = true
-                    } else {
-                        prev = false
-                    }
-                    if selection >= sections.count - 1 {
-                        next = true
-                    } else {
-                        next = false
+                    withAnimation {
+                        if selection > 0 {
+                            selection -= 1
+                        }
+                        if selection <= 0 {
+                            prev = true
+                        } else {
+                            prev = false
+                        }
+                        if selection >= sections.count - 1 {
+                            next = true
+                        } else {
+                            next = false
+                        }
                     }
                 }, label: {
                     Image(systemName: "chevron.left")
@@ -35,21 +37,26 @@ struct SectionPicker: View {
                 .disabled(prev)
                 Spacer()
                 Text("\(sections[selection])")
+                    .transition(.slide.combined(with: .opacity))
+                    .id(selection)
                 Spacer()
                 Button(action: {
-                    if selection < sections.count - 1 {
-                        selection += 1
+                    withAnimation {
+                        if selection < sections.count - 1 {
+                            selection += 1
+                        }
+                        if selection <= 0 {
+                            prev = true
+                        } else {
+                            prev = false
+                        }
+                        if selection >= sections.count - 1 {
+                            next = true
+                        } else {
+                            next = false
+                        }
                     }
-                    if selection <= 0 {
-                        prev = true
-                    } else {
-                        prev = false
-                    }
-                    if selection >= sections.count - 1 {
-                        next = true
-                    } else {
-                        next = false
-                    }
+                  
                 }, label: {
                     Image(systemName: "chevron.right")
                         .frame(width: 40, height: 40)

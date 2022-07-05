@@ -13,31 +13,11 @@ struct InitialView: View {
                     Text("Feed")
                     Image(systemName: "list.dash")
                 }.tag(1)
-                .gesture(DragGesture(minimumDistance: 3.0, coordinateSpace: .local)
-                    .onEnded { gesture in
-                        let horizontalAmount = gesture.translation.width as CGFloat
-                        let verticalAmount = gesture.translation.height as CGFloat
-                        
-                        if abs(horizontalAmount) > abs(verticalAmount) && horizontalAmount < 0 {
-                            selection = 2
-                        }
-                    }
-                )
             MainView()
                 .tabItem {
                     Text("Tracker")
                     Image(systemName: "hare")
                 }.tag(2)
-                .gesture(DragGesture(minimumDistance: 20, coordinateSpace: .global)
-                    .onEnded { gesture in
-                        let horizontalAmount = gesture.translation.width as CGFloat
-                        let verticalAmount = gesture.translation.height as CGFloat
-                        
-                        if abs(horizontalAmount) > abs(verticalAmount) && horizontalAmount > 0 {
-                            selection = 1
-                        }
-                    }
-                )
         }
         .accentColor(.red)
         .onAppear {
